@@ -1,0 +1,2630 @@
+﻿---
+apiVersion: "apps/v1"
+kind: "DaemonSet"
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "metadata-proxy"
+      kubernetes.io/cluster-service: "true"
+      version: "v0.1"
+    matchExpressions: []
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+      labels:
+        kubernetes.io/cluster-service: "true"
+        nirmata.io/daemonset.name: "metadata-proxy-v0.1"
+        version: "v0.1"
+        k8s-app: "metadata-proxy"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector:
+        beta.kubernetes.io/metadata-proxy-ready: "true"
+      serviceAccountName: "metadata-proxy"
+      serviceAccount: "metadata-proxy"
+      hostNetwork: true
+      schedulerName: "default-scheduler"
+      priorityClassName: "system-node-critical"
+      dnsPolicy: "Default"
+      containers:
+      - name: "metadata-proxy"
+        image: "k8s.gcr.io/metadata-proxy:v0.1.10"
+        command: []
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            memory: "25Mi"
+            cpu: "30m"
+          requests:
+            memory: "25Mi"
+            cpu: "30m"
+      - name: "prometheus-to-sd-exporter"
+        image: "k8s.gcr.io/prometheus-to-sd:v0.3.1"
+        command:
+        - "/monitor"
+        - "--stackdriver-prefix=container.googleapis.com/internal/addons"
+        - "--api-override=https://monitoring.googleapis.com/"
+        - "--source=metadata_proxy:http://127.0.0.1:989?whitelisted=request_count"
+        - "--pod-id=$(POD_NAME)"
+        - "--namespace-id=$(POD_NAMESPACE)"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "POD_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.name"
+        - name: "POD_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.namespace"
+        resources:
+          limits:
+            memory: "20Mi"
+            cpu: "2m"
+          requests:
+            memory: "20Mi"
+            cpu: "2m"
+      securityContext: {}
+      tolerations:
+      - operator: "Exists"
+        effect: "NoExecute"
+      - operator: "Exists"
+        effect: "NoSchedule"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"extensions/v1beta1\"\
+      ,\"kind\":\"DaemonSet\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"metadata-proxy\",\"kubernetes.io/cluster-service\"\
+      :\"true\",\"version\":\"v0.1\"},\"name\":\"metadata-proxy-v0.1\",\"namespace\"\
+      :\"kube-system\"},\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"\
+      scheduler.alpha.kubernetes.io/critical-pod\":\"\"},\"labels\":{\"k8s-app\":\"\
+      metadata-proxy\",\"kubernetes.io/cluster-service\":\"true\",\"version\":\"v0.1\"\
+      }},\"spec\":{\"containers\":[{\"image\":\"k8s.gcr.io/metadata-proxy:v0.1.10\"\
+      ,\"name\":\"metadata-proxy\",\"resources\":{\"limits\":{\"cpu\":\"30m\",\"memory\"\
+      :\"25Mi\"},\"requests\":{\"cpu\":\"30m\",\"memory\":\"25Mi\"}},\"securityContext\"\
+      :{\"privileged\":true}},{\"command\":[\"/monitor\",\"--stackdriver-prefix=container.googleapis.com/internal/addons\"\
+      ,\"--api-override=https://monitoring.googleapis.com/\",\"--source=metadata_proxy:http://127.0.0.1:989?whitelisted=request_count\"\
+      ,\"--pod-id=$(POD_NAME)\",\"--namespace-id=$(POD_NAMESPACE)\"],\"env\":[{\"\
+      name\":\"POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"\
+      }}},{\"name\":\"POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"\
+      metadata.namespace\"}}}],\"image\":\"k8s.gcr.io/prometheus-to-sd:v0.3.1\",\"\
+      name\":\"prometheus-to-sd-exporter\",\"resources\":{\"limits\":{\"cpu\":\"2m\"\
+      ,\"memory\":\"20Mi\"},\"requests\":{\"cpu\":\"2m\",\"memory\":\"20Mi\"}}}],\"\
+      dnsPolicy\":\"Default\",\"hostNetwork\":true,\"nodeSelector\":{\"beta.kubernetes.io/metadata-proxy-ready\"\
+      :\"true\"},\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\"\
+      :\"metadata-proxy\",\"terminationGracePeriodSeconds\":30,\"tolerations\":[{\"\
+      effect\":\"NoExecute\",\"operator\":\"Exists\"},{\"effect\":\"NoSchedule\",\"\
+      operator\":\"Exists\"}]}},\"updateStrategy\":{\"type\":\"RollingUpdate\"}}}\n"
+    deprecated.daemonset.template.generation: "1"
+  uid: "99ebb4bc-5762-11e9-a030-42010a96010e"
+  name: "metadata-proxy-v0.1"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    nirmata.io/daemonset.name: "metadata-proxy-v0.1"
+    version: "v0.1"
+    k8s-app: "metadata-proxy"
+
+---
+apiVersion: "apps/v1"
+kind: "DaemonSet"
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "nvidia-gpu-device-plugin"
+    matchExpressions: []
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+      labels:
+        nirmata.io/daemonset.name: "nvidia-gpu-device-plugin"
+        k8s-app: "nvidia-gpu-device-plugin"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      schedulerName: "default-scheduler"
+      priorityClassName: "system-node-critical"
+      dnsPolicy: "ClusterFirst"
+      volumes:
+      - name: "device-plugin"
+        hostPath:
+          path: "/var/lib/kubelet/device-plugins"
+          type: ""
+      - name: "dev"
+        hostPath:
+          path: "/dev"
+          type: ""
+      containers:
+      - name: "nvidia-gpu-device-plugin"
+        image: "k8s.gcr.io/nvidia-gpu-device-plugin@sha256:0842734032018be107fa2490c98156992911e3e1f2a21e059ff0105b07dd8e9e"
+        command:
+        - "/usr/bin/nvidia-gpu-device-plugin"
+        - "-logtostderr"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        volumeMounts:
+        - name: "device-plugin"
+          mountPath: "/device-plugin"
+        - name: "dev"
+          mountPath: "/dev"
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            memory: "10Mi"
+            cpu: "50m"
+          requests:
+            memory: "10Mi"
+            cpu: "50m"
+      securityContext: {}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "cloud.google.com/gke-accelerator"
+                operator: "Exists"
+                values: []
+      tolerations:
+      - operator: "Exists"
+        effect: "NoExecute"
+      - operator: "Exists"
+        effect: "NoSchedule"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"apps/v1\"\
+      ,\"kind\":\"DaemonSet\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"nvidia-gpu-device-plugin\"},\"name\":\"nvidia-gpu-device-plugin\"\
+      ,\"namespace\":\"kube-system\"},\"spec\":{\"selector\":{\"matchLabels\":{\"\
+      k8s-app\":\"nvidia-gpu-device-plugin\"}},\"template\":{\"metadata\":{\"annotations\"\
+      :{\"scheduler.alpha.kubernetes.io/critical-pod\":\"\"},\"labels\":{\"k8s-app\"\
+      :\"nvidia-gpu-device-plugin\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"\
+      requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"\
+      matchExpressions\":[{\"key\":\"cloud.google.com/gke-accelerator\",\"operator\"\
+      :\"Exists\"}]}]}}},\"containers\":[{\"command\":[\"/usr/bin/nvidia-gpu-device-plugin\"\
+      ,\"-logtostderr\"],\"image\":\"k8s.gcr.io/nvidia-gpu-device-plugin@sha256:0842734032018be107fa2490c98156992911e3e1f2a21e059ff0105b07dd8e9e\"\
+      ,\"name\":\"nvidia-gpu-device-plugin\",\"resources\":{\"limits\":{\"cpu\":\"\
+      50m\",\"memory\":\"10Mi\"},\"requests\":{\"cpu\":\"50m\",\"memory\":\"10Mi\"\
+      }},\"securityContext\":{\"privileged\":true},\"volumeMounts\":[{\"mountPath\"\
+      :\"/device-plugin\",\"name\":\"device-plugin\"},{\"mountPath\":\"/dev\",\"name\"\
+      :\"dev\"}]}],\"priorityClassName\":\"system-node-critical\",\"tolerations\"\
+      :[{\"effect\":\"NoExecute\",\"operator\":\"Exists\"},{\"effect\":\"NoSchedule\"\
+      ,\"operator\":\"Exists\"}],\"volumes\":[{\"hostPath\":{\"path\":\"/var/lib/kubelet/device-plugins\"\
+      },\"name\":\"device-plugin\"},{\"hostPath\":{\"path\":\"/dev\"},\"name\":\"\
+      dev\"}]}},\"updateStrategy\":{\"type\":\"RollingUpdate\"}}}\n"
+    deprecated.daemonset.template.generation: "1"
+  uid: "9f471730-5762-11e9-a030-42010a96010e"
+  name: "nvidia-gpu-device-plugin"
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    nirmata.io/daemonset.name: "nvidia-gpu-device-plugin"
+    k8s-app: "nvidia-gpu-device-plugin"
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    control-plane.alpha.kubernetes.io/leader: "{\"holderIdentity\":\"gke-2ae2bbe16d4d1ec6d162-3fd5-4a58-vm_5c0aa306-58e6-11e9-a64a-42010a960fe0\"\
+      ,\"leaseDurationSeconds\":15,\"acquireTime\":\"2019-04-07T03:37:21Z\",\"renewTime\"\
+      :\"2019-04-09T09:37:58Z\",\"leaderTransitions\":2}"
+  uid: "8e249414-5762-11e9-a030-42010a96010e"
+  name: "kube-controller-manager"
+  labels: {}
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    control-plane.alpha.kubernetes.io/leader: "{\"holderIdentity\":\"gke-2ae2bbe16d4d1ec6d162-3fd5-4a58-vm_5c972a8d-58e6-11e9-956b-42010a960fe0\"\
+      ,\"leaseDurationSeconds\":15,\"acquireTime\":\"2019-04-07T03:37:20Z\",\"renewTime\"\
+      :\"2019-04-09T09:37:56Z\",\"leaderTransitions\":2}"
+  uid: "8e91e411-5762-11e9-a030-42010a96010e"
+  name: "kube-scheduler"
+  labels: {}
+
+---
+apiVersion: "apps/v1"
+kind: "DaemonSet"
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "fluentd-gcp"
+      kubernetes.io/cluster-service: "true"
+      version: "v3.2.0"
+    matchExpressions: []
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+      labels:
+        kubernetes.io/cluster-service: "true"
+        nirmata.io/daemonset.name: "fluentd-gcp-v3.2.0"
+        version: "v3.2.0"
+        k8s-app: "fluentd-gcp"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector:
+        beta.kubernetes.io/fluentd-ds-ready: "true"
+      serviceAccountName: "fluentd-gcp"
+      serviceAccount: "fluentd-gcp"
+      schedulerName: "default-scheduler"
+      priorityClassName: "system-node-critical"
+      dnsPolicy: "Default"
+      volumes:
+      - name: "varlog"
+        hostPath:
+          path: "/var/log"
+          type: ""
+      - name: "varlibdockercontainers"
+        hostPath:
+          path: "/var/lib/docker/containers"
+          type: ""
+      - name: "config-volume"
+        configMap:
+          name: "fluentd-gcp-config-old-v1.2.5"
+          defaultMode: 420
+      containers:
+      - name: "fluentd-gcp"
+        image: "gcr.io/stackdriver-agents/stackdriver-logging-agent:0.6-1.6.0-1"
+        command: []
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "NODE_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "spec.nodeName"
+        - name: "STACKDRIVER_METADATA_AGENT_URL"
+          value: "http://$(NODE_NAME):8799"
+        volumeMounts:
+        - name: "varlog"
+          mountPath: "/var/log"
+        - name: "varlibdockercontainers"
+          readOnly: true
+          mountPath: "/var/lib/docker/containers"
+        - name: "config-volume"
+          mountPath: "/etc/google-fluentd/config.d"
+        livenessProbe:
+          initialDelaySeconds: 600
+          timeoutSeconds: 1
+          periodSeconds: 60
+          successThreshold: 1
+          failureThreshold: 3
+          exec:
+            command:
+            - "/bin/sh"
+            - "-c"
+            - "LIVENESS_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-300}; STUCK_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-900};\
+              \ if [ ! -e /var/log/fluentd-buffers ]; then\n  exit 1;\nfi; touch -d\
+              \ \"${STUCK_THRESHOLD_SECONDS} seconds ago\" /tmp/marker-stuck; if [[\
+              \ -z \"$(find /var/log/fluentd-buffers -type f -newer /tmp/marker-stuck\
+              \ -print -quit)\" ]]; then\n  rm -rf /var/log/fluentd-buffers;\n  exit\
+              \ 1;\nfi; touch -d \"${LIVENESS_THRESHOLD_SECONDS} seconds ago\" /tmp/marker-liveness;\
+              \ if [[ -z \"$(find /var/log/fluentd-buffers -type f -newer /tmp/marker-liveness\
+              \ -print -quit)\" ]]; then\n  exit 1;\nfi;\n"
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "1"
+          requests:
+            memory: "200Mi"
+            cpu: "100m"
+      - name: "prometheus-to-sd-exporter"
+        image: "k8s.gcr.io/prometheus-to-sd:v0.3.1"
+        command:
+        - "/monitor"
+        - "--stackdriver-prefix=container.googleapis.com/internal/addons"
+        - "--api-override=https://monitoring.googleapis.com/"
+        - "--source=fluentd:http://localhost:24231?whitelisted=stackdriver_successful_requests_count,stackdriver_failed_requests_count,stackdriver_ingested_entries_count,stackdriver_dropped_entries_count"
+        - "--pod-id=$(POD_NAME)"
+        - "--namespace-id=$(POD_NAMESPACE)"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "POD_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.name"
+        - name: "POD_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.namespace"
+        resources: {}
+      securityContext: {}
+      tolerations:
+      - operator: "Exists"
+        effect: "NoExecute"
+      - operator: "Exists"
+        effect: "NoSchedule"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"extensions/v1beta1\"\
+      ,\"kind\":\"DaemonSet\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"fluentd-gcp\",\"kubernetes.io/cluster-service\"\
+      :\"true\",\"version\":\"v3.2.0\"},\"name\":\"fluentd-gcp-v3.2.0\",\"namespace\"\
+      :\"kube-system\"},\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"\
+      scheduler.alpha.kubernetes.io/critical-pod\":\"\"},\"labels\":{\"k8s-app\":\"\
+      fluentd-gcp\",\"kubernetes.io/cluster-service\":\"true\",\"version\":\"v3.2.0\"\
+      }},\"spec\":{\"containers\":[{\"env\":[{\"name\":\"NODE_NAME\",\"valueFrom\"\
+      :{\"fieldRef\":{\"apiVersion\":\"v1\",\"fieldPath\":\"spec.nodeName\"}}},{\"\
+      name\":\"STACKDRIVER_METADATA_AGENT_URL\",\"value\":\"http://$(NODE_NAME):8799\"\
+      }],\"image\":\"gcr.io/stackdriver-agents/stackdriver-logging-agent:0.6-1.6.0-1\"\
+      ,\"livenessProbe\":{\"exec\":{\"command\":[\"/bin/sh\",\"-c\",\"LIVENESS_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-300};\
+      \ STUCK_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-900}; if [ ! -e /var/log/fluentd-buffers\
+      \ ]; then\\n  exit 1;\\nfi; touch -d \\\"${STUCK_THRESHOLD_SECONDS} seconds\
+      \ ago\\\" /tmp/marker-stuck; if [[ -z \\\"$(find /var/log/fluentd-buffers -type\
+      \ f -newer /tmp/marker-stuck -print -quit)\\\" ]]; then\\n  rm -rf /var/log/fluentd-buffers;\\\
+      n  exit 1;\\nfi; touch -d \\\"${LIVENESS_THRESHOLD_SECONDS} seconds ago\\\"\
+      \ /tmp/marker-liveness; if [[ -z \\\"$(find /var/log/fluentd-buffers -type f\
+      \ -newer /tmp/marker-liveness -print -quit)\\\" ]]; then\\n  exit 1;\\nfi;\\\
+      n\"]},\"initialDelaySeconds\":600,\"periodSeconds\":60},\"name\":\"fluentd-gcp\"\
+      ,\"volumeMounts\":[{\"mountPath\":\"/var/log\",\"name\":\"varlog\"},{\"mountPath\"\
+      :\"/var/lib/docker/containers\",\"name\":\"varlibdockercontainers\",\"readOnly\"\
+      :true},{\"mountPath\":\"/etc/google-fluentd/config.d\",\"name\":\"config-volume\"\
+      }]},{\"command\":[\"/monitor\",\"--stackdriver-prefix=container.googleapis.com/internal/addons\"\
+      ,\"--api-override=https://monitoring.googleapis.com/\",\"--source=fluentd:http://localhost:24231?whitelisted=stackdriver_successful_requests_count,stackdriver_failed_requests_count,stackdriver_ingested_entries_count,stackdriver_dropped_entries_count\"\
+      ,\"--pod-id=$(POD_NAME)\",\"--namespace-id=$(POD_NAMESPACE)\"],\"env\":[{\"\
+      name\":\"POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"\
+      }}},{\"name\":\"POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"\
+      metadata.namespace\"}}}],\"image\":\"k8s.gcr.io/prometheus-to-sd:v0.3.1\",\"\
+      name\":\"prometheus-to-sd-exporter\"}],\"dnsPolicy\":\"Default\",\"nodeSelector\"\
+      :{\"beta.kubernetes.io/fluentd-ds-ready\":\"true\"},\"priorityClassName\":\"\
+      system-node-critical\",\"serviceAccountName\":\"fluentd-gcp\",\"terminationGracePeriodSeconds\"\
+      :30,\"tolerations\":[{\"effect\":\"NoExecute\",\"operator\":\"Exists\"},{\"\
+      effect\":\"NoSchedule\",\"operator\":\"Exists\"}],\"volumes\":[{\"hostPath\"\
+      :{\"path\":\"/var/log\"},\"name\":\"varlog\"},{\"hostPath\":{\"path\":\"/var/lib/docker/containers\"\
+      },\"name\":\"varlibdockercontainers\"},{\"configMap\":{\"name\":\"fluentd-gcp-config-old-v1.2.5\"\
+      },\"name\":\"config-volume\"}]}},\"updateStrategy\":{\"type\":\"RollingUpdate\"\
+      }}}\n"
+    deprecated.daemonset.template.generation: "2"
+  uid: "99c2ced8-5762-11e9-a030-42010a96010e"
+  name: "fluentd-gcp-v3.2.0"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    nirmata.io/daemonset.name: "fluentd-gcp-v3.2.0"
+    version: "v3.2.0"
+    k8s-app: "fluentd-gcp"
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    control-plane.alpha.kubernetes.io/leader: "{\"holderIdentity\":\"gke-2ae2bbe16d4d1ec6d162-3fd5-4a58-vm\"\
+      ,\"leaseDurationSeconds\":15,\"acquireTime\":\"2019-04-07T03:37:19Z\",\"renewTime\"\
+      :\"2019-04-09T09:37:58Z\",\"leaderTransitions\":2}"
+  uid: "8d886b18-5762-11e9-a030-42010a96010e"
+  name: "gcp-controller-manager"
+  labels: {}
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  uid: "4118b3e2d95bbabb"
+  provider-uid: "4118b3e2d95bbabb"
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "900c6f04-5762-11e9-a030-42010a96010e"
+  name: "ingress-uid"
+  labels:
+    nirmata.io/configmap.name: "ingress-uid"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data: {}
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations:
+    control-plane.alpha.kubernetes.io/leader: "{\"holderIdentity\":\"gke-2ae2bbe16d4d1ec6d162-3fd5-4a58-vm_53f73\"\
+      ,\"leaseDurationSeconds\":15,\"acquireTime\":\"2019-04-07T03:37:29Z\",\"renewTime\"\
+      :\"2019-04-09T09:37:47Z\",\"leaderTransitions\":2}"
+  uid: "999503c2-5762-11e9-a030-42010a96010e"
+  name: "ingress-gce-lock"
+  labels:
+    nirmata.io/configmap.name: "ingress-gce-lock"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data: {}
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "987c8698-5762-11e9-a030-42010a96010e"
+  name: "kube-dns"
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+    nirmata.io/configmap.name: "kube-dns"
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"extensions/v1beta1\"\
+      ,\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"heapster\",\"kubernetes.io/cluster-service\":\"\
+      true\",\"version\":\"v1.6.0-beta.1\"},\"name\":\"heapster-v1.6.0-beta.1\",\"\
+      namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\"\
+      :{\"k8s-app\":\"heapster\",\"version\":\"v1.6.0-beta.1\"}},\"template\":{\"\
+      metadata\":{\"annotations\":{\"scheduler.alpha.kubernetes.io/critical-pod\"\
+      :\"\",\"seccomp.security.alpha.kubernetes.io/pod\":\"docker/default\"},\"labels\"\
+      :{\"k8s-app\":\"heapster\",\"version\":\"v1.6.0-beta.1\"}},\"spec\":{\"containers\"\
+      :[{\"command\":[\"/heapster\",\"--source=kubernetes.summary_api:?host_id_annotation=container.googleapis.com/instance_id\"\
+      ,\"--sink=stackdriver:?cluster_name=gke-provider\\u0026use_old_resources=true\\\
+      u0026use_new_resources=false\\u0026min_interval_sec=100\\u0026batch_export_timeout_sec=110\\\
+      u0026cluster_location=us-east4-a\"],\"image\":\"k8s.gcr.io/heapster-amd64:v1.6.0-beta.1\"\
+      ,\"livenessProbe\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":8082,\"scheme\"\
+      :\"HTTP\"},\"initialDelaySeconds\":180,\"timeoutSeconds\":5},\"name\":\"heapster\"\
+      },{\"command\":[\"/monitor\",\"--source=heapster:http://localhost:8082?whitelisted=stackdriver_requests_count,stackdriver_timeseries_count\"\
+      ,\"--stackdriver-prefix=container.googleapis.com/internal/addons\",\"--api-override=https://monitoring.googleapis.com/\"\
+      ,\"--pod-id=$(POD_NAME)\",\"--namespace-id=$(POD_NAMESPACE)\"],\"env\":[{\"\
+      name\":\"POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"\
+      }}},{\"name\":\"POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"\
+      metadata.namespace\"}}}],\"image\":\"k8s.gcr.io/prometheus-to-sd:v0.3.1\",\"\
+      name\":\"prom-to-sd\"},{\"command\":[\"/pod_nanny\",\"--config-dir=/etc/config\"\
+      ,\"--cpu=80m\",\"--extra-cpu=0.5m\",\"--memory=140Mi\",\"--extra-memory=4Mi\"\
+      ,\"--threshold=5\",\"--deployment=heapster-v1.6.0-beta.1\",\"--container=heapster\"\
+      ,\"--poll-period=300000\",\"--estimator=exponential\"],\"env\":[{\"name\":\"\
+      MY_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"\
+      name\":\"MY_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"\
+      }}}],\"image\":\"k8s.gcr.io/addon-resizer:1.8.1\",\"name\":\"heapster-nanny\"\
+      ,\"resources\":{\"limits\":{\"cpu\":\"50m\",\"memory\":\"92560Ki\"},\"requests\"\
+      :{\"cpu\":\"50m\",\"memory\":\"92560Ki\"}},\"volumeMounts\":[{\"mountPath\"\
+      :\"/etc/config\",\"name\":\"heapster-config-volume\"}]}],\"priorityClassName\"\
+      :\"system-cluster-critical\",\"serviceAccountName\":\"heapster\",\"tolerations\"\
+      :[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"\
+      configMap\":{\"name\":\"heapster-config\"},\"name\":\"heapster-config-volume\"\
+      }]}}}}\n"
+  uid: "98f5f3fe-5762-11e9-a030-42010a96010e"
+  name: "heapster-v1.6.0-beta.1"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/deployment.name: "heapster-v1.6.0-beta.1"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    version: "v1.6.0-beta.1"
+    k8s-app: "heapster"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "heapster"
+      version: "v1.6.0-beta.1"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+        seccomp.security.alpha.kubernetes.io/pod: "docker/default"
+      labels:
+        nirmata.io/deployment.name: "heapster-v1.6.0-beta.1"
+        version: "v1.6.0-beta.1"
+        k8s-app: "heapster"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "heapster"
+      serviceAccount: "heapster"
+      schedulerName: "default-scheduler"
+      priorityClassName: "system-cluster-critical"
+      dnsPolicy: "ClusterFirst"
+      volumes:
+      - name: "heapster-config-volume"
+        configMap:
+          name: "heapster-config"
+          defaultMode: 420
+      containers:
+      - name: "heapster"
+        image: "k8s.gcr.io/heapster-amd64:v1.6.0-beta.1"
+        command:
+        - "/heapster"
+        - "--source=kubernetes.summary_api:?host_id_annotation=container.googleapis.com/instance_id"
+        - "--sink=stackdriver:?cluster_name=gke-provider&use_old_resources=true&use_new_resources=false&min_interval_sec=100&batch_export_timeout_sec=110&cluster_location=us-east4-a"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        livenessProbe:
+          initialDelaySeconds: 180
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            path: "/healthz"
+            port: 8082
+            scheme: "HTTP"
+        resources:
+          limits:
+            memory: "204Mi"
+            cpu: "88m"
+          requests:
+            memory: "204Mi"
+            cpu: "88m"
+      - name: "prom-to-sd"
+        image: "k8s.gcr.io/prometheus-to-sd:v0.3.1"
+        command:
+        - "/monitor"
+        - "--source=heapster:http://localhost:8082?whitelisted=stackdriver_requests_count,stackdriver_timeseries_count"
+        - "--stackdriver-prefix=container.googleapis.com/internal/addons"
+        - "--api-override=https://monitoring.googleapis.com/"
+        - "--pod-id=$(POD_NAME)"
+        - "--namespace-id=$(POD_NAMESPACE)"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "POD_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.name"
+        - name: "POD_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.namespace"
+        resources: {}
+      - name: "heapster-nanny"
+        image: "k8s.gcr.io/addon-resizer:1.8.1"
+        command:
+        - "/pod_nanny"
+        - "--config-dir=/etc/config"
+        - "--cpu=80m"
+        - "--extra-cpu=0.5m"
+        - "--memory=140Mi"
+        - "--extra-memory=4Mi"
+        - "--threshold=5"
+        - "--deployment=heapster-v1.6.0-beta.1"
+        - "--container=heapster"
+        - "--poll-period=300000"
+        - "--estimator=exponential"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "MY_POD_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.name"
+        - name: "MY_POD_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.namespace"
+        volumeMounts:
+        - name: "heapster-config-volume"
+          mountPath: "/etc/config"
+        resources:
+          limits:
+            memory: "92560Ki"
+            cpu: "50m"
+          requests:
+            memory: "92560Ki"
+            cpu: "50m"
+      securityContext: {}
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "9afc7108-5762-11e9-a030-42010a96010e"
+  name: "metrics-server"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    kubernetes.io/name: "Metrics-server"
+subsets:
+- addresses:
+  - ip: "10.28.0.10"
+    nodeName: "gke-gke-provider-default-pool-40e8e9b0-f552"
+    targetRef:
+      kind: "Pod"
+      name: "metrics-server-v0.2.1-fd596d746-8vrw2"
+      namespace: "kube-system"
+      resourceVersion: "649"
+      uid: "b19dc53c-5762-11e9-a030-42010a96010e"
+  ports:
+  - port: 443
+    protocol: "TCP"
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"extensions/v1beta1\"\
+      ,\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"metrics-server\",\"kubernetes.io/cluster-service\"\
+      :\"true\",\"version\":\"v0.2.1\"},\"name\":\"metrics-server-v0.2.1\",\"namespace\"\
+      :\"kube-system\"},\"spec\":{\"selector\":{\"matchLabels\":{\"k8s-app\":\"metrics-server\"\
+      ,\"version\":\"v0.2.1\"}},\"template\":{\"metadata\":{\"annotations\":{\"scheduler.alpha.kubernetes.io/critical-pod\"\
+      :\"\",\"seccomp.security.alpha.kubernetes.io/pod\":\"docker/default\"},\"labels\"\
+      :{\"k8s-app\":\"metrics-server\",\"version\":\"v0.2.1\"},\"name\":\"metrics-server\"\
+      },\"spec\":{\"containers\":[{\"command\":[\"/metrics-server\",\"--source=kubernetes.summary_api:''\"\
+      ],\"image\":\"k8s.gcr.io/metrics-server-amd64:v0.2.1\",\"name\":\"metrics-server\"\
+      ,\"ports\":[{\"containerPort\":443,\"name\":\"https\",\"protocol\":\"TCP\"}]},{\"\
+      command\":[\"/pod_nanny\",\"--config-dir=/etc/config\",\"--cpu=40m\",\"--extra-cpu=0.5m\"\
+      ,\"--memory=40Mi\",\"--extra-memory=4Mi\",\"--threshold=5\",\"--deployment=metrics-server-v0.2.1\"\
+      ,\"--container=metrics-server\",\"--poll-period=300000\",\"--estimator=exponential\"\
+      ],\"env\":[{\"name\":\"MY_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\"\
+      :\"metadata.name\"}}},{\"name\":\"MY_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\"\
+      :{\"fieldPath\":\"metadata.namespace\"}}}],\"image\":\"k8s.gcr.io/addon-resizer:1.8.1\"\
+      ,\"name\":\"metrics-server-nanny\",\"resources\":{\"limits\":{\"cpu\":\"100m\"\
+      ,\"memory\":\"300Mi\"},\"requests\":{\"cpu\":\"5m\",\"memory\":\"50Mi\"}},\"\
+      volumeMounts\":[{\"mountPath\":\"/etc/config\",\"name\":\"metrics-server-config-volume\"\
+      }]}],\"priorityClassName\":\"system-cluster-critical\",\"serviceAccountName\"\
+      :\"metrics-server\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\"\
+      :\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"metrics-server-config\"\
+      },\"name\":\"metrics-server-config-volume\"}]}}}}\n"
+  uid: "9a90af8b-5762-11e9-a030-42010a96010e"
+  name: "metrics-server-v0.2.1"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/deployment.name: "metrics-server-v0.2.1"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    version: "v0.2.1"
+    k8s-app: "metrics-server"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "metrics-server"
+      version: "v0.2.1"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+        seccomp.security.alpha.kubernetes.io/pod: "docker/default"
+      name: "metrics-server"
+      labels:
+        nirmata.io/deployment.name: "metrics-server-v0.2.1"
+        version: "v0.2.1"
+        k8s-app: "metrics-server"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "metrics-server"
+      serviceAccount: "metrics-server"
+      schedulerName: "default-scheduler"
+      priorityClassName: "system-cluster-critical"
+      dnsPolicy: "ClusterFirst"
+      volumes:
+      - name: "metrics-server-config-volume"
+        configMap:
+          name: "metrics-server-config"
+          defaultMode: 420
+      containers:
+      - name: "metrics-server"
+        image: "k8s.gcr.io/metrics-server-amd64:v0.2.1"
+        command:
+        - "/metrics-server"
+        - "--source=kubernetes.summary_api:''"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: "https"
+          containerPort: 443
+          protocol: "TCP"
+        resources:
+          limits:
+            memory: "104Mi"
+            cpu: "48m"
+          requests:
+            memory: "104Mi"
+            cpu: "48m"
+      - name: "metrics-server-nanny"
+        image: "k8s.gcr.io/addon-resizer:1.8.1"
+        command:
+        - "/pod_nanny"
+        - "--config-dir=/etc/config"
+        - "--cpu=40m"
+        - "--extra-cpu=0.5m"
+        - "--memory=40Mi"
+        - "--extra-memory=4Mi"
+        - "--threshold=5"
+        - "--deployment=metrics-server-v0.2.1"
+        - "--container=metrics-server"
+        - "--poll-period=300000"
+        - "--estimator=exponential"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "MY_POD_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.name"
+        - name: "MY_POD_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.namespace"
+        volumeMounts:
+        - name: "metrics-server-config-volume"
+          mountPath: "/etc/config"
+        resources:
+          limits:
+            memory: "300Mi"
+            cpu: "100m"
+          requests:
+            memory: "50Mi"
+            cpu: "5m"
+      securityContext: {}
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "98d5ab30-5762-11e9-a030-42010a96010e"
+  name: "default-http-backend"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    k8s-app: "glbc"
+    kubernetes.io/name: "GLBCDefaultBackend"
+subsets:
+- addresses:
+  - ip: "10.28.0.9"
+    nodeName: "gke-gke-provider-default-pool-40e8e9b0-f552"
+    targetRef:
+      kind: "Pod"
+      name: "l7-default-backend-7ff48cffd7-dx6dn"
+      namespace: "kube-system"
+      resourceVersion: "676"
+      uid: "98c2ebb3-5762-11e9-a030-42010a96010e"
+  ports:
+  - name: "http"
+    port: 8080
+    protocol: "TCP"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"v1\",\"kind\"\
+      :\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"kube-dns\",\"kubernetes.io/cluster-service\":\"\
+      true\",\"kubernetes.io/name\":\"KubeDNS\"},\"name\":\"kube-dns\",\"namespace\"\
+      :\"kube-system\"},\"spec\":{\"clusterIP\":\"10.31.240.10\",\"ports\":[{\"name\"\
+      :\"dns\",\"port\":53,\"protocol\":\"UDP\"},{\"name\":\"dns-tcp\",\"port\":53,\"\
+      protocol\":\"TCP\"}],\"selector\":{\"k8s-app\":\"kube-dns\"}}}\n"
+  uid: "9923f58c-5762-11e9-a030-42010a96010e"
+  name: "kube-dns"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/service.name: "kube-dns"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    kubernetes.io/name: "KubeDNS"
+    k8s-app: "kube-dns"
+spec:
+  clusterIP: "10.31.240.10"
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  sessionAffinity: "None"
+  type: "ClusterIP"
+  selector:
+    k8s-app: "kube-dns"
+  ports:
+  - name: "dns"
+    port: 53
+    protocol: "UDP"
+    targetPort: 53
+  - name: "dns-tcp"
+    port: 53
+    protocol: "TCP"
+    targetPort: 53
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"v1\",\"kind\"\
+      :\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"kubernetes.io/cluster-service\":\"true\",\"kubernetes.io/name\"\
+      :\"Heapster\"},\"name\":\"heapster\",\"namespace\":\"kube-system\"},\"spec\"\
+      :{\"ports\":[{\"port\":80,\"targetPort\":8082}],\"selector\":{\"k8s-app\":\"\
+      heapster\"}}}\n"
+  uid: "991ccb2f-5762-11e9-a030-42010a96010e"
+  name: "heapster"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/service.name: "heapster"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    kubernetes.io/name: "Heapster"
+spec:
+  clusterIP: "10.31.246.59"
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  sessionAffinity: "None"
+  type: "ClusterIP"
+  selector:
+    k8s-app: "heapster"
+  ports:
+  - port: 80
+    protocol: "TCP"
+    targetPort: 8082
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"apps/v1beta1\"\
+      ,\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"event-exporter\",\"kubernetes.io/cluster-service\"\
+      :\"true\",\"version\":\"v0.2.3\"},\"name\":\"event-exporter-v0.2.3\",\"namespace\"\
+      :\"kube-system\"},\"spec\":{\"replicas\":1,\"template\":{\"metadata\":{\"labels\"\
+      :{\"k8s-app\":\"event-exporter\",\"version\":\"v0.2.3\"}},\"spec\":{\"containers\"\
+      :[{\"command\":[\"/event-exporter\",\"-sink-opts=-stackdriver-resource-model=old\"\
+      ],\"image\":\"k8s.gcr.io/event-exporter:v0.2.3\",\"name\":\"event-exporter\"\
+      },{\"command\":[\"/monitor\",\"--stackdriver-prefix=container.googleapis.com/internal/addons\"\
+      ,\"--api-override=https://monitoring.googleapis.com/\",\"--source=event_exporter:http://localhost:80?whitelisted=stackdriver_sink_received_entry_count,stackdriver_sink_request_count,stackdriver_sink_successfully_sent_entry_count\"\
+      ,\"--pod-id=$(POD_NAME)\",\"--namespace-id=$(POD_NAMESPACE)\"],\"env\":[{\"\
+      name\":\"POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"\
+      }}},{\"name\":\"POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"\
+      metadata.namespace\"}}}],\"image\":\"k8s.gcr.io/prometheus-to-sd:v0.3.1\",\"\
+      name\":\"prometheus-to-sd-exporter\"}],\"serviceAccountName\":\"event-exporter-sa\"\
+      ,\"terminationGracePeriodSeconds\":30,\"volumes\":[{\"hostPath\":{\"path\":\"\
+      /etc/ssl/certs\"},\"name\":\"ssl-certs\"}]}}}}\n"
+  uid: "99998b86-5762-11e9-a030-42010a96010e"
+  name: "event-exporter-v0.2.3"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/deployment.name: "event-exporter-v0.2.3"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    version: "v0.2.3"
+    k8s-app: "event-exporter"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      k8s-app: "event-exporter"
+      version: "v0.2.3"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: "25%"
+      maxUnavailable: "25%"
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        nirmata.io/deployment.name: "event-exporter-v0.2.3"
+        version: "v0.2.3"
+        k8s-app: "event-exporter"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "event-exporter-sa"
+      serviceAccount: "event-exporter-sa"
+      schedulerName: "default-scheduler"
+      dnsPolicy: "ClusterFirst"
+      volumes:
+      - name: "ssl-certs"
+        hostPath:
+          path: "/etc/ssl/certs"
+          type: ""
+      containers:
+      - name: "event-exporter"
+        image: "k8s.gcr.io/event-exporter:v0.2.3"
+        command:
+        - "/event-exporter"
+        - "-sink-opts=-stackdriver-resource-model=old"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        resources: {}
+      - name: "prometheus-to-sd-exporter"
+        image: "k8s.gcr.io/prometheus-to-sd:v0.3.1"
+        command:
+        - "/monitor"
+        - "--stackdriver-prefix=container.googleapis.com/internal/addons"
+        - "--api-override=https://monitoring.googleapis.com/"
+        - "--source=event_exporter:http://localhost:80?whitelisted=stackdriver_sink_received_entry_count,stackdriver_sink_request_count,stackdriver_sink_successfully_sent_entry_count"
+        - "--pod-id=$(POD_NAME)"
+        - "--namespace-id=$(POD_NAMESPACE)"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "POD_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.name"
+        - name: "POD_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.namespace"
+        resources: {}
+      securityContext: {}
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"apps/v1\"\
+      ,\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"kube-dns-autoscaler\",\"kubernetes.io/cluster-service\"\
+      :\"true\"},\"name\":\"kube-dns-autoscaler\",\"namespace\":\"kube-system\"},\"\
+      spec\":{\"selector\":{\"matchLabels\":{\"k8s-app\":\"kube-dns-autoscaler\"}},\"\
+      template\":{\"metadata\":{\"annotations\":{\"scheduler.alpha.kubernetes.io/critical-pod\"\
+      :\"\",\"seccomp.security.alpha.kubernetes.io/pod\":\"docker/default\"},\"labels\"\
+      :{\"k8s-app\":\"kube-dns-autoscaler\"}},\"spec\":{\"containers\":[{\"command\"\
+      :[\"/cluster-proportional-autoscaler\",\"--namespace=kube-system\",\"--configmap=kube-dns-autoscaler\"\
+      ,\"--target=Deployment/kube-dns\",\"--default-params={\\\"linear\\\":{\\\"coresPerReplica\\\
+      \":256,\\\"nodesPerReplica\\\":16,\\\"preventSinglePointFailure\\\":true}}\"\
+      ,\"--logtostderr=true\",\"--v=2\"],\"image\":\"k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.2-r2\"\
+      ,\"name\":\"autoscaler\",\"resources\":{\"requests\":{\"cpu\":\"20m\",\"memory\"\
+      :\"10Mi\"}}}],\"priorityClassName\":\"system-cluster-critical\",\"serviceAccountName\"\
+      :\"kube-dns-autoscaler\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"\
+      operator\":\"Exists\"}]}}}}\n"
+  uid: "99664fc6-5762-11e9-a030-42010a96010e"
+  name: "kube-dns-autoscaler"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/deployment.name: "kube-dns-autoscaler"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    k8s-app: "kube-dns-autoscaler"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "kube-dns-autoscaler"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: "25%"
+      maxUnavailable: "25%"
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+        seccomp.security.alpha.kubernetes.io/pod: "docker/default"
+      labels:
+        nirmata.io/deployment.name: "kube-dns-autoscaler"
+        k8s-app: "kube-dns-autoscaler"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "kube-dns-autoscaler"
+      serviceAccount: "kube-dns-autoscaler"
+      schedulerName: "default-scheduler"
+      priorityClassName: "system-cluster-critical"
+      dnsPolicy: "ClusterFirst"
+      containers:
+      - name: "autoscaler"
+        image: "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.2-r2"
+        command:
+        - "/cluster-proportional-autoscaler"
+        - "--namespace=kube-system"
+        - "--configmap=kube-dns-autoscaler"
+        - "--target=Deployment/kube-dns"
+        - "--default-params={\"linear\":{\"coresPerReplica\":256,\"nodesPerReplica\"\
+          :16,\"preventSinglePointFailure\":true}}"
+        - "--logtostderr=true"
+        - "--v=2"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        resources:
+          requests:
+            memory: "10Mi"
+            cpu: "20m"
+      securityContext: {}
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "991db848-5762-11e9-a030-42010a96010e"
+  name: "heapster"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    kubernetes.io/name: "Heapster"
+subsets:
+- addresses:
+  - ip: "10.28.0.11"
+    nodeName: "gke-gke-provider-default-pool-40e8e9b0-f552"
+    targetRef:
+      kind: "Pod"
+      name: "heapster-v1.6.0-beta.1-6997948548-4m4zt"
+      namespace: "kube-system"
+      resourceVersion: "652"
+      uid: "b370d0f0-5762-11e9-a030-42010a96010e"
+  ports:
+  - port: 8082
+    protocol: "TCP"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"v1\",\"kind\"\
+      :\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"kubernetes.io/cluster-service\":\"true\",\"kubernetes.io/name\"\
+      :\"Metrics-server\"},\"name\":\"metrics-server\",\"namespace\":\"kube-system\"\
+      },\"spec\":{\"ports\":[{\"port\":443,\"protocol\":\"TCP\",\"targetPort\":\"\
+      https\"}],\"selector\":{\"k8s-app\":\"metrics-server\"}}}\n"
+  uid: "9aefef45-5762-11e9-a030-42010a96010e"
+  name: "metrics-server"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/service.name: "metrics-server"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    kubernetes.io/name: "Metrics-server"
+spec:
+  clusterIP: "10.31.248.89"
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  sessionAffinity: "None"
+  type: "ClusterIP"
+  selector:
+    k8s-app: "metrics-server"
+  ports:
+  - port: 443
+    protocol: "TCP"
+    targetPort: "https"
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"apps/v1\"\
+      ,\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"glbc\",\"kubernetes.io/cluster-service\":\"true\"\
+      ,\"kubernetes.io/name\":\"GLBC\"},\"name\":\"l7-default-backend\",\"namespace\"\
+      :\"kube-system\"},\"spec\":{\"selector\":{\"matchLabels\":{\"k8s-app\":\"glbc\"\
+      }},\"template\":{\"metadata\":{\"annotations\":{\"seccomp.security.alpha.kubernetes.io/pod\"\
+      :\"docker/default\"},\"labels\":{\"k8s-app\":\"glbc\",\"name\":\"glbc\"}},\"\
+      spec\":{\"containers\":[{\"image\":\"k8s.gcr.io/defaultbackend-amd64:1.5\",\"\
+      livenessProbe\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":8080,\"scheme\"\
+      :\"HTTP\"},\"initialDelaySeconds\":30,\"timeoutSeconds\":5},\"name\":\"default-http-backend\"\
+      ,\"ports\":[{\"containerPort\":8080}],\"resources\":{\"limits\":{\"cpu\":\"\
+      10m\",\"memory\":\"20Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"20Mi\"\
+      }}}]}}}}\n"
+  uid: "98bc3f12-5762-11e9-a030-42010a96010e"
+  name: "l7-default-backend"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/deployment.name: "l7-default-backend"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    kubernetes.io/name: "GLBC"
+    k8s-app: "glbc"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "glbc"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: "25%"
+      maxUnavailable: "25%"
+  template:
+    metadata:
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: "docker/default"
+      labels:
+        nirmata.io/deployment.name: "l7-default-backend"
+        name: "glbc"
+        k8s-app: "glbc"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      schedulerName: "default-scheduler"
+      dnsPolicy: "ClusterFirst"
+      containers:
+      - name: "default-http-backend"
+        image: "k8s.gcr.io/defaultbackend-amd64:1.5"
+        command: []
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - containerPort: 8080
+          protocol: "TCP"
+        livenessProbe:
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            path: "/healthz"
+            port: 8080
+            scheme: "HTTP"
+        resources:
+          limits:
+            memory: "20Mi"
+            cpu: "10m"
+          requests:
+            memory: "20Mi"
+            cpu: "10m"
+      securityContext: {}
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  containers.input.conf: "# This configuration file for Fluentd is used\n# to watch\
+    \ changes to Docker log files that live in the\n# directory /var/lib/docker/containers/\
+    \ and are symbolically\n# linked to from the /var/log/containers directory using\
+    \ names that capture the\n# pod name and container name. These logs are then submitted\
+    \ to\n# Google Cloud Logging which assumes the installation of the cloud-logging\
+    \ plug-in.\n#\n# Example\n# =======\n# A line in the Docker log file might look\
+    \ like this JSON:\n#\n# {\"log\":\"2014/09/25 21:15:03 Got request with path wombat\\\
+    \\n\",\n#  \"stream\":\"stderr\",\n#   \"time\":\"2014-09-25T21:15:03.499185026Z\"\
+    }\n#\n# The original tag is derived from the log file's location.\n# For example\
+    \ a Docker container's logs might be in the directory:\n#  /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b\n\
+    # and in the file:\n#  997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\n\
+    # where 997599971ee6... is the Docker ID of the running container.\n# The Kubernetes\
+    \ kubelet makes a symbolic link to this file on the host\n# machine in the /var/log/containers\
+    \ directory which includes the pod name,\n# the namespace name and the Kubernetes\
+    \ container name:\n#    synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\n\
+    #    ->\n#    /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\n\
+    # The /var/log directory on the host is mapped to the /var/log directory in the\
+    \ container\n# running this instance of Fluentd and we end up collecting the file:\n\
+    #   /var/log/containers/synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\n\
+    # This results in the tag:\n#  var.log.containers.synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\n\
+    # where 'synthetic-logger-0.25lps-pod' is the pod name, 'default' is the\n# namespace\
+    \ name, 'synth-lgr' is the container name and '997599971ee6..' is\n# the container\
+    \ ID.\n# The record reformer is used is discard the var.log.containers prefix\
+    \ and\n# the Docker container ID suffix and \"kubernetes.\" is pre-pended giving\
+    \ the tag:\n#   kubernetes.synthetic-logger-0.25lps-pod_default_synth-lgr\n# Tag\
+    \ is then parsed by google_cloud plugin and translated to the metadata,\n# visible\
+    \ in the log viewer\n\n# Json Log Example:\n# {\"log\":\"[info:2016-02-16T16:04:05.930-08:00]\
+    \ Some log text here\\n\",\"stream\":\"stdout\",\"time\":\"2016-02-17T00:04:05.931087621Z\"\
+    }\n# CRI Log Example:\n# 2016-02-17T00:04:05.931087621Z stdout F [info:2016-02-16T16:04:05.930-08:00]\
+    \ Some log text here\n<source>\n  @type tail\n  path /var/log/containers/*.log\n\
+    \  pos_file /var/log/gcp-containers.log.pos\n  # Tags at this point are in the\
+    \ format of:\n  # reform.var.log.containers.<POD_NAME>_<NAMESPACE_NAME>_<CONTAINER_NAME>-<CONTAINER_ID>.log\n\
+    \  tag reform.*\n  read_from_head true\n  <parse>\n    @type multi_format\n  \
+    \  <pattern>\n      format json\n      time_key time\n      time_format %Y-%m-%dT%H:%M:%S.%NZ\n\
+    \    </pattern>\n    <pattern>\n      format /^(?<time>.+) (?<stream>stdout|stderr)\
+    \ [^ ]* (?<log>.*)$/\n      time_format %Y-%m-%dT%H:%M:%S.%N%:z\n    </pattern>\n\
+    \  </parse>\n</source>\n\n<filter reform.**>\n  @type parser\n  format /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<log>.*)/\n\
+    \  reserve_data true\n  suppress_parse_error_log true\n  emit_invalid_record_to_error\
+    \ false\n  key_name log\n</filter>\n\n<match reform.**>\n  @type record_reformer\n\
+    \  enable_ruby true\n  # Tags at this point are in the format of:\n  # 'raw.kubernetes.<POD_NAME>_<NAMESPACE_NAME>_<CONTAINER_NAME>'.\n\
+    \  tag raw.kubernetes.${tag_suffix[4].split('-')[0..-2].join('-')}\n</match>\n\
+    \n# Detect exceptions in the log output and forward them as one log entry.\n<match\
+    \ raw.kubernetes.**>\n  @type detect_exceptions\n\n  remove_tag_prefix raw\n \
+    \ message log\n  stream stream\n  multiline_flush_interval 5\n  max_bytes 500000\n\
+    \  max_lines 1000\n</match>"
+  output.conf: "# This match is placed before the all-matching output to provide metric\n\
+    # exporter with a process start timestamp for correct exporting of\n# cumulative\
+    \ metrics to Stackdriver.\n<match process_start>\n  @type prometheus\n\n  <metric>\n\
+    \    type gauge\n    name process_start_time_seconds\n    desc Timestamp of the\
+    \ process start in seconds\n    key process_start_timestamp\n  </metric>\n</match>\n\
+    \n# This filter allows to count the number of log entries read by fluentd\n# before\
+    \ they are processed by the output plugin. This in turn allows to\n# monitor the\
+    \ number of log entries that were read but never sent, e.g.\n# because of liveness\
+    \ probe removing buffer.\n<filter **>\n  @type prometheus\n  <metric>\n    type\
+    \ counter\n    name logging_entry_count\n    desc Total number of log entries\
+    \ generated by either application containers or system components\n  </metric>\n\
+    </filter>\n\n# TODO(instrumentation): Reconsider this workaround later.\n# Trim\
+    \ the entries which exceed slightly less than 100KB, to avoid\n# dropping them.\
+    \ It is a necessity, because Stackdriver only supports\n# entries that are up\
+    \ to 100KB in size.\n<filter kubernetes.**>\n  @type record_transformer\n  enable_ruby\
+    \ true\n  <record>\n    log ${record['log'].length > 100000 ? \"[Trimmed]#{record['log'][0..100000]}...\"\
+    \ : record['log']}\n  </record>\n</filter>\n\n# Do not collect fluentd's own logs\
+    \ to avoid infinite loops.\n<match fluent.**>\n  @type null\n</match>\n\n# We\
+    \ use 2 output stanzas - one to handle the container logs and one to handle\n\
+    # the node daemon logs, the latter of which explicitly sends its logs to the\n\
+    # compute.googleapis.com service rather than container.googleapis.com to keep\n\
+    # them separate since most users don't care about the node logs.\n<match kubernetes.**>\n\
+    \  @type google_cloud\n\n  # Try to detect JSON formatted log entries.\n  detect_json\
+    \ true\n  # Collect metrics in Prometheus registry about plugin activity.\n  enable_monitoring\
+    \ true\n  monitoring_type prometheus\n  # Allow log entries from multiple containers\
+    \ to be sent in the same request.\n  split_logs_by_tag false\n  # Set the buffer\
+    \ type to file to improve the reliability and reduce the memory consumption\n\
+    \  buffer_type file\n  buffer_path /var/log/fluentd-buffers/kubernetes.containers.buffer\n\
+    \  # Set queue_full action to block because we want to pause gracefully\n  # in\
+    \ case of the off-the-limits load instead of throwing an exception\n  buffer_queue_full_action\
+    \ block\n  # Set the chunk limit conservatively to avoid exceeding the recommended\n\
+    \  # chunk size of 5MB per write request.\n  buffer_chunk_limit 1M\n  # Cap the\
+    \ combined memory usage of this buffer and the one below to\n  # 1MiB/chunk *\
+    \ (6 + 2) chunks = 8 MiB\n  buffer_queue_limit 6\n  # Never wait more than 5 seconds\
+    \ before flushing logs in the non-error case.\n  flush_interval 5s\n  # Never\
+    \ wait longer than 30 seconds between retries.\n  max_retry_wait 30\n  # Disable\
+    \ the limit on the number of retries (retry forever).\n  disable_retry_limit\n\
+    \  # Use multiple threads for processing.\n  num_threads 2\n  use_grpc true\n\
+    </match>\n\n# Keep a smaller buffer here since these logs are less important than\
+    \ the user's\n# container logs.\n<match **>\n  @type google_cloud\n\n  detect_json\
+    \ true\n  enable_monitoring true\n  monitoring_type prometheus\n  # Allow entries\
+    \ from multiple system logs to be sent in the same request.\n  split_logs_by_tag\
+    \ false\n  detect_subservice false\n  buffer_type file\n  buffer_path /var/log/fluentd-buffers/kubernetes.system.buffer\n\
+    \  buffer_queue_full_action block\n  buffer_chunk_limit 1M\n  buffer_queue_limit\
+    \ 2\n  flush_interval 5s\n  max_retry_wait 30\n  disable_retry_limit\n  num_threads\
+    \ 2\n  use_grpc true\n</match>"
+  system.input.conf: "# Example:\n# Dec 21 23:17:22 gke-foo-1-1-4b5cbd14-node-4eoj\
+    \ startupscript: Finished running startup script /var/run/google.startup.script\n\
+    <source>\n  @type tail\n  format syslog\n  path /var/log/startupscript.log\n \
+    \ pos_file /var/log/gcp-startupscript.log.pos\n  tag startupscript\n</source>\n\
+    \n# Examples:\n# time=\"2016-02-04T06:51:03.053580605Z\" level=info msg=\"GET\
+    \ /containers/json\"\n# time=\"2016-02-04T07:53:57.505612354Z\" level=error msg=\"\
+    HTTP Error\" err=\"No such image: -f\" statusCode=404\n# TODO(random-liu): Remove\
+    \ this after cri container runtime rolls out.\n<source>\n  @type tail\n  format\
+    \ /^time=\"(?<time>[^)]*)\" level=(?<severity>[^ ]*) msg=\"(?<message>[^\"]*)\"\
+    ( err=\"(?<error>[^\"]*)\")?( statusCode=($<status_code>\\d+))?/\n  path /var/log/docker.log\n\
+    \  pos_file /var/log/gcp-docker.log.pos\n  tag docker\n</source>\n\n# Example:\n\
+    # 2016/02/04 06:52:38 filePurge: successfully removed file /var/etcd/data/member/wal/00000000000006d0-00000000010a23d1.wal\n\
+    <source>\n  @type tail\n  # Not parsing this, because it doesn't have anything\
+    \ particularly useful to\n  # parse out of it (like severities).\n  format none\n\
+    \  path /var/log/etcd.log\n  pos_file /var/log/gcp-etcd.log.pos\n  tag etcd\n\
+    </source>\n\n# Multi-line parsing is required for all the kube logs because very\
+    \ large log\n# statements, such as those that include entire object bodies, get\
+    \ split into\n# multiple lines by glog.\n\n# Example:\n# I0204 07:32:30.020537\
+    \    3368 server.go:1048] POST /stats/container/: (13.972191ms) 200 [[Go-http-client/1.1]\
+    \ 10.244.1.3:40537]\n<source>\n  @type tail\n  format multiline\n  multiline_flush_interval\
+    \ 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\w)(?<time>\\\
+    d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n  time_format\
+    \ %m%d %H:%M:%S.%N\n  path /var/log/kubelet.log\n  pos_file /var/log/gcp-kubelet.log.pos\n\
+    \  tag kubelet\n</source>\n\n# Example:\n# I1118 21:26:53.975789       6 proxier.go:1096]\
+    \ Port \"nodePort for kube-system/default-http-backend:http\" (:31429/tcp) was\
+    \ open before and is still needed\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/kube-proxy.log\n  pos_file /var/log/gcp-kube-proxy.log.pos\n\
+    \  tag kube-proxy\n</source>\n\n# Example:\n# I0204 07:00:19.604280       5 handlers.go:131]\
+    \ GET /api/v1/nodes: (1.624207ms) 200 [[kube-controller-manager/v1.1.3 (linux/amd64)\
+    \ kubernetes/6a81b50] 127.0.0.1:38266]\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/kube-apiserver.log\n  pos_file\
+    \ /var/log/gcp-kube-apiserver.log.pos\n  tag kube-apiserver\n</source>\n\n# Example:\n\
+    # I0204 06:55:31.872680       5 servicecontroller.go:277] LB already exists and\
+    \ doesn't need update for service kube-system/kube-ui\n<source>\n  @type tail\n\
+    \  format multiline\n  multiline_flush_interval 5s\n  format_firstline /^\\w\\\
+    d{4}/\n  format1 /^(?<severity>\\w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^\
+    \ \\]]+)\\] (?<message>.*)/\n  time_format %m%d %H:%M:%S.%N\n  path /var/log/kube-controller-manager.log\n\
+    \  pos_file /var/log/gcp-kube-controller-manager.log.pos\n  tag kube-controller-manager\n\
+    </source>\n\n# Example:\n# W0204 06:49:18.239674       7 reflector.go:245] pkg/scheduler/factory/factory.go:193:\
+    \ watch of *api.Service ended with: 401: The event in requested index is outdated\
+    \ and cleared (the requested history has been cleared [2578313/2577886]) [2579312]\n\
+    <source>\n  @type tail\n  format multiline\n  multiline_flush_interval 5s\n  format_firstline\
+    \ /^\\w\\d{4}/\n  format1 /^(?<severity>\\w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\\
+    d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n  time_format %m%d %H:%M:%S.%N\n\
+    \  path /var/log/kube-scheduler.log\n  pos_file /var/log/gcp-kube-scheduler.log.pos\n\
+    \  tag kube-scheduler\n</source>\n\n# Example:\n# I1104 10:36:20.242766      \
+    \ 5 rescheduler.go:73] Running Rescheduler\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/rescheduler.log\n  pos_file /var/log/gcp-rescheduler.log.pos\n\
+    \  tag rescheduler\n</source>\n\n# Example:\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+    \ Reading config from path /etc/gce.conf\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/glbc.log\n  pos_file /var/log/gcp-glbc.log.pos\n\
+    \  tag glbc\n</source>\n\n# Example:\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+    \ Reading config from path /etc/gce.conf\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/cluster-autoscaler.log\n  pos_file\
+    \ /var/log/gcp-cluster-autoscaler.log.pos\n  tag cluster-autoscaler\n</source>\n\
+    \n# Logs from systemd-journal for interesting services.\n# TODO(random-liu): Keep\
+    \ this for compatibility, remove this after\n# cri container runtime rolls out.\n\
+    <source>\n  @type systemd\n  filters [{ \"_SYSTEMD_UNIT\": \"docker.service\"\
+    \ }]\n  pos_file /var/log/gcp-journald-docker.pos\n  read_from_head true\n  tag\
+    \ docker\n</source>\n\n<source>\n  @type systemd\n  filters [{ \"_SYSTEMD_UNIT\"\
+    : \"containerd.service\" }]\n  pos_file /var/log/gcp-journald-container-runtime.pos\n\
+    \  read_from_head true\n  tag container-runtime\n</source>\n\n<source>\n  @type\
+    \ systemd\n  filters [{ \"_SYSTEMD_UNIT\": \"kubelet.service\" }]\n  pos_file\
+    \ /var/log/gcp-journald-kubelet.pos\n  read_from_head true\n  tag kubelet\n</source>\n\
+    \n<source>\n  @type systemd\n  filters [{ \"_SYSTEMD_UNIT\": \"node-problem-detector.service\"\
+    \ }]\n  pos_file /var/log/gcp-journald-node-problem-detector.pos\n  read_from_head\
+    \ true\n  tag node-problem-detector\n</source>"
+  monitoring.conf: "# This source is used to acquire approximate process start timestamp,\n\
+    # which purpose is explained before the corresponding output plugin.\n<source>\n\
+    \  @type exec\n  command /bin/sh -c 'date +%s'\n  tag process_start\n  time_format\
+    \ %Y-%m-%d %H:%M:%S\n  keys process_start_timestamp\n</source>\n\n# This filter\
+    \ is used to convert process start timestamp to integer\n# value for correct ingestion\
+    \ in the prometheus output plugin.\n<filter process_start>\n  @type record_transformer\n\
+    \  enable_ruby true\n  auto_typecast true\n  <record>\n    process_start_timestamp\
+    \ ${record[\"process_start_timestamp\"].to_i}\n  </record>\n</filter>"
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"v1\",\"data\"\
+      :{\"containers.input.conf\":\"# This configuration file for Fluentd is used\\\
+      n# to watch changes to Docker log files that live in the\\n# directory /var/lib/docker/containers/\
+      \ and are symbolically\\n# linked to from the /var/log/containers directory\
+      \ using names that capture the\\n# pod name and container name. These logs are\
+      \ then submitted to\\n# Google Cloud Logging which assumes the installation\
+      \ of the cloud-logging plug-in.\\n#\\n# Example\\n# =======\\n# A line in the\
+      \ Docker log file might look like this JSON:\\n#\\n# {\\\"log\\\":\\\"2014/09/25\
+      \ 21:15:03 Got request with path wombat\\\\\\\\n\\\",\\n#  \\\"stream\\\":\\\
+      \"stderr\\\",\\n#   \\\"time\\\":\\\"2014-09-25T21:15:03.499185026Z\\\"}\\n#\\\
+      n# The original tag is derived from the log file's location.\\n# For example\
+      \ a Docker container's logs might be in the directory:\\n#  /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b\\\
+      n# and in the file:\\n#  997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\\\
+      n# where 997599971ee6... is the Docker ID of the running container.\\n# The\
+      \ Kubernetes kubelet makes a symbolic link to this file on the host\\n# machine\
+      \ in the /var/log/containers directory which includes the pod name,\\n# the\
+      \ namespace name and the Kubernetes container name:\\n#    synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\\\
+      n#    -\\u003e\\n#    /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\\\
+      n# The /var/log directory on the host is mapped to the /var/log directory in\
+      \ the container\\n# running this instance of Fluentd and we end up collecting\
+      \ the file:\\n#   /var/log/containers/synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\\\
+      n# This results in the tag:\\n#  var.log.containers.synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\\\
+      n# where 'synthetic-logger-0.25lps-pod' is the pod name, 'default' is the\\\
+      n# namespace name, 'synth-lgr' is the container name and '997599971ee6..' is\\\
+      n# the container ID.\\n# The record reformer is used is discard the var.log.containers\
+      \ prefix and\\n# the Docker container ID suffix and \\\"kubernetes.\\\" is pre-pended\
+      \ giving the tag:\\n#   kubernetes.synthetic-logger-0.25lps-pod_default_synth-lgr\\\
+      n# Tag is then parsed by google_cloud plugin and translated to the metadata,\\\
+      n# visible in the log viewer\\n\\n# Json Log Example:\\n# {\\\"log\\\":\\\"\
+      [info:2016-02-16T16:04:05.930-08:00] Some log text here\\\\n\\\",\\\"stream\\\
+      \":\\\"stdout\\\",\\\"time\\\":\\\"2016-02-17T00:04:05.931087621Z\\\"}\\n# CRI\
+      \ Log Example:\\n# 2016-02-17T00:04:05.931087621Z stdout F [info:2016-02-16T16:04:05.930-08:00]\
+      \ Some log text here\\n\\u003csource\\u003e\\n  @type tail\\n  path /var/log/containers/*.log\\\
+      n  pos_file /var/log/gcp-containers.log.pos\\n  # Tags at this point are in\
+      \ the format of:\\n  # reform.var.log.containers.\\u003cPOD_NAME\\u003e_\\u003cNAMESPACE_NAME\\\
+      u003e_\\u003cCONTAINER_NAME\\u003e-\\u003cCONTAINER_ID\\u003e.log\\n  tag reform.*\\\
+      n  read_from_head true\\n  \\u003cparse\\u003e\\n    @type multi_format\\n \
+      \   \\u003cpattern\\u003e\\n      format json\\n      time_key time\\n     \
+      \ time_format %Y-%m-%dT%H:%M:%S.%NZ\\n    \\u003c/pattern\\u003e\\n    \\u003cpattern\\\
+      u003e\\n      format /^(?\\u003ctime\\u003e.+) (?\\u003cstream\\u003estdout|stderr)\
+      \ [^ ]* (?\\u003clog\\u003e.*)$/\\n      time_format %Y-%m-%dT%H:%M:%S.%N%:z\\\
+      n    \\u003c/pattern\\u003e\\n  \\u003c/parse\\u003e\\n\\u003c/source\\u003e\\\
+      n\\n\\u003cfilter reform.**\\u003e\\n  @type parser\\n  format /^(?\\u003cseverity\\\
+      u003e\\\\w)(?\\u003ctime\\u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\
+      \\d+)\\\\s+(?\\u003csource\\u003e[^ \\\\]]+)\\\\] (?\\u003clog\\u003e.*)/\\\
+      n  reserve_data true\\n  suppress_parse_error_log true\\n  emit_invalid_record_to_error\
+      \ false\\n  key_name log\\n\\u003c/filter\\u003e\\n\\n\\u003cmatch reform.**\\\
+      u003e\\n  @type record_reformer\\n  enable_ruby true\\n  # Tags at this point\
+      \ are in the format of:\\n  # 'raw.kubernetes.\\u003cPOD_NAME\\u003e_\\u003cNAMESPACE_NAME\\\
+      u003e_\\u003cCONTAINER_NAME\\u003e'.\\n  tag raw.kubernetes.${tag_suffix[4].split('-')[0..-2].join('-')}\\\
+      n\\u003c/match\\u003e\\n\\n# Detect exceptions in the log output and forward\
+      \ them as one log entry.\\n\\u003cmatch raw.kubernetes.**\\u003e\\n  @type detect_exceptions\\\
+      n\\n  remove_tag_prefix raw\\n  message log\\n  stream stream\\n  multiline_flush_interval\
+      \ 5\\n  max_bytes 500000\\n  max_lines 1000\\n\\u003c/match\\u003e\",\"monitoring.conf\"\
+      :\"# This source is used to acquire approximate process start timestamp,\\n#\
+      \ which purpose is explained before the corresponding output plugin.\\n\\u003csource\\\
+      u003e\\n  @type exec\\n  command /bin/sh -c 'date +%s'\\n  tag process_start\\\
+      n  time_format %Y-%m-%d %H:%M:%S\\n  keys process_start_timestamp\\n\\u003c/source\\\
+      u003e\\n\\n# This filter is used to convert process start timestamp to integer\\\
+      n# value for correct ingestion in the prometheus output plugin.\\n\\u003cfilter\
+      \ process_start\\u003e\\n  @type record_transformer\\n  enable_ruby true\\n\
+      \  auto_typecast true\\n  \\u003crecord\\u003e\\n    process_start_timestamp\
+      \ ${record[\\\"process_start_timestamp\\\"].to_i}\\n  \\u003c/record\\u003e\\\
+      n\\u003c/filter\\u003e\",\"output.conf\":\"# This match is placed before the\
+      \ all-matching output to provide metric\\n# exporter with a process start timestamp\
+      \ for correct exporting of\\n# cumulative metrics to Stackdriver.\\n\\u003cmatch\
+      \ process_start\\u003e\\n  @type prometheus\\n\\n  \\u003cmetric\\u003e\\n \
+      \   type gauge\\n    name process_start_time_seconds\\n    desc Timestamp of\
+      \ the process start in seconds\\n    key process_start_timestamp\\n  \\u003c/metric\\\
+      u003e\\n\\u003c/match\\u003e\\n\\n# This filter allows to count the number of\
+      \ log entries read by fluentd\\n# before they are processed by the output plugin.\
+      \ This in turn allows to\\n# monitor the number of log entries that were read\
+      \ but never sent, e.g.\\n# because of liveness probe removing buffer.\\n\\u003cfilter\
+      \ **\\u003e\\n  @type prometheus\\n  \\u003cmetric\\u003e\\n    type counter\\\
+      n    name logging_entry_count\\n    desc Total number of log entries generated\
+      \ by either application containers or system components\\n  \\u003c/metric\\\
+      u003e\\n\\u003c/filter\\u003e\\n\\n# TODO(instrumentation): Reconsider this\
+      \ workaround later.\\n# Trim the entries which exceed slightly less than 100KB,\
+      \ to avoid\\n# dropping them. It is a necessity, because Stackdriver only supports\\\
+      n# entries that are up to 100KB in size.\\n\\u003cfilter kubernetes.**\\u003e\\\
+      n  @type record_transformer\\n  enable_ruby true\\n  \\u003crecord\\u003e\\\
+      n    log ${record['log'].length \\u003e 100000 ? \\\"[Trimmed]#{record['log'][0..100000]}...\\\
+      \" : record['log']}\\n  \\u003c/record\\u003e\\n\\u003c/filter\\u003e\\n\\n#\
+      \ Do not collect fluentd's own logs to avoid infinite loops.\\n\\u003cmatch\
+      \ fluent.**\\u003e\\n  @type null\\n\\u003c/match\\u003e\\n\\n# We use 2 output\
+      \ stanzas - one to handle the container logs and one to handle\\n# the node\
+      \ daemon logs, the latter of which explicitly sends its logs to the\\n# compute.googleapis.com\
+      \ service rather than container.googleapis.com to keep\\n# them separate since\
+      \ most users don't care about the node logs.\\n\\u003cmatch kubernetes.**\\\
+      u003e\\n  @type google_cloud\\n\\n  # Try to detect JSON formatted log entries.\\\
+      n  detect_json true\\n  # Collect metrics in Prometheus registry about plugin\
+      \ activity.\\n  enable_monitoring true\\n  monitoring_type prometheus\\n  #\
+      \ Allow log entries from multiple containers to be sent in the same request.\\\
+      n  split_logs_by_tag false\\n  # Set the buffer type to file to improve the\
+      \ reliability and reduce the memory consumption\\n  buffer_type file\\n  buffer_path\
+      \ /var/log/fluentd-buffers/kubernetes.containers.buffer\\n  # Set queue_full\
+      \ action to block because we want to pause gracefully\\n  # in case of the off-the-limits\
+      \ load instead of throwing an exception\\n  buffer_queue_full_action block\\\
+      n  # Set the chunk limit conservatively to avoid exceeding the recommended\\\
+      n  # chunk size of 5MB per write request.\\n  buffer_chunk_limit 1M\\n  # Cap\
+      \ the combined memory usage of this buffer and the one below to\\n  # 1MiB/chunk\
+      \ * (6 + 2) chunks = 8 MiB\\n  buffer_queue_limit 6\\n  # Never wait more than\
+      \ 5 seconds before flushing logs in the non-error case.\\n  flush_interval 5s\\\
+      n  # Never wait longer than 30 seconds between retries.\\n  max_retry_wait 30\\\
+      n  # Disable the limit on the number of retries (retry forever).\\n  disable_retry_limit\\\
+      n  # Use multiple threads for processing.\\n  num_threads 2\\n  use_grpc true\\\
+      n\\u003c/match\\u003e\\n\\n# Keep a smaller buffer here since these logs are\
+      \ less important than the user's\\n# container logs.\\n\\u003cmatch **\\u003e\\\
+      n  @type google_cloud\\n\\n  detect_json true\\n  enable_monitoring true\\n\
+      \  monitoring_type prometheus\\n  # Allow entries from multiple system logs\
+      \ to be sent in the same request.\\n  split_logs_by_tag false\\n  detect_subservice\
+      \ false\\n  buffer_type file\\n  buffer_path /var/log/fluentd-buffers/kubernetes.system.buffer\\\
+      n  buffer_queue_full_action block\\n  buffer_chunk_limit 1M\\n  buffer_queue_limit\
+      \ 2\\n  flush_interval 5s\\n  max_retry_wait 30\\n  disable_retry_limit\\n \
+      \ num_threads 2\\n  use_grpc true\\n\\u003c/match\\u003e\",\"system.input.conf\"\
+      :\"# Example:\\n# Dec 21 23:17:22 gke-foo-1-1-4b5cbd14-node-4eoj startupscript:\
+      \ Finished running startup script /var/run/google.startup.script\\n\\u003csource\\\
+      u003e\\n  @type tail\\n  format syslog\\n  path /var/log/startupscript.log\\\
+      n  pos_file /var/log/gcp-startupscript.log.pos\\n  tag startupscript\\n\\u003c/source\\\
+      u003e\\n\\n# Examples:\\n# time=\\\"2016-02-04T06:51:03.053580605Z\\\" level=info\
+      \ msg=\\\"GET /containers/json\\\"\\n# time=\\\"2016-02-04T07:53:57.505612354Z\\\
+      \" level=error msg=\\\"HTTP Error\\\" err=\\\"No such image: -f\\\" statusCode=404\\\
+      n# TODO(random-liu): Remove this after cri container runtime rolls out.\\n\\\
+      u003csource\\u003e\\n  @type tail\\n  format /^time=\\\"(?\\u003ctime\\u003e[^)]*)\\\
+      \" level=(?\\u003cseverity\\u003e[^ ]*) msg=\\\"(?\\u003cmessage\\u003e[^\\\"\
+      ]*)\\\"( err=\\\"(?\\u003cerror\\u003e[^\\\"]*)\\\")?( statusCode=($\\u003cstatus_code\\\
+      u003e\\\\d+))?/\\n  path /var/log/docker.log\\n  pos_file /var/log/gcp-docker.log.pos\\\
+      n  tag docker\\n\\u003c/source\\u003e\\n\\n# Example:\\n# 2016/02/04 06:52:38\
+      \ filePurge: successfully removed file /var/etcd/data/member/wal/00000000000006d0-00000000010a23d1.wal\\\
+      n\\u003csource\\u003e\\n  @type tail\\n  # Not parsing this, because it doesn't\
+      \ have anything particularly useful to\\n  # parse out of it (like severities).\\\
+      n  format none\\n  path /var/log/etcd.log\\n  pos_file /var/log/gcp-etcd.log.pos\\\
+      n  tag etcd\\n\\u003c/source\\u003e\\n\\n# Multi-line parsing is required for\
+      \ all the kube logs because very large log\\n# statements, such as those that\
+      \ include entire object bodies, get split into\\n# multiple lines by glog.\\\
+      n\\n# Example:\\n# I0204 07:32:30.020537    3368 server.go:1048] POST /stats/container/:\
+      \ (13.972191ms) 200 [[Go-http-client/1.1] 10.244.1.3:40537]\\n\\u003csource\\\
+      u003e\\n  @type tail\\n  format multiline\\n  multiline_flush_interval 5s\\\
+      n  format_firstline /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\
+      \\w)(?\\u003ctime\\u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\
+      \\s+(?\\u003csource\\u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format\
+      \ %m%d %H:%M:%S.%N\\n  path /var/log/kubelet.log\\n  pos_file /var/log/gcp-kubelet.log.pos\\\
+      n  tag kubelet\\n\\u003c/source\\u003e\\n\\n# Example:\\n# I1118 21:26:53.975789\
+      \       6 proxier.go:1096] Port \\\"nodePort for kube-system/default-http-backend:http\\\
+      \" (:31429/tcp) was open before and is still needed\\n\\u003csource\\u003e\\\
+      n  @type tail\\n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline\
+      \ /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\\
+      u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\\
+      u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/kube-proxy.log\\n  pos_file /var/log/gcp-kube-proxy.log.pos\\\
+      n  tag kube-proxy\\n\\u003c/source\\u003e\\n\\n# Example:\\n# I0204 07:00:19.604280\
+      \       5 handlers.go:131] GET /api/v1/nodes: (1.624207ms) 200 [[kube-controller-manager/v1.1.3\
+      \ (linux/amd64) kubernetes/6a81b50] 127.0.0.1:38266]\\n\\u003csource\\u003e\\\
+      n  @type tail\\n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline\
+      \ /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\\
+      u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\\
+      u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/kube-apiserver.log\\n  pos_file /var/log/gcp-kube-apiserver.log.pos\\\
+      n  tag kube-apiserver\\n\\u003c/source\\u003e\\n\\n# Example:\\n# I0204 06:55:31.872680\
+      \       5 servicecontroller.go:277] LB already exists and doesn't need update\
+      \ for service kube-system/kube-ui\\n\\u003csource\\u003e\\n  @type tail\\n \
+      \ format multiline\\n  multiline_flush_interval 5s\\n  format_firstline /^\\\
+      \\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\
+      \\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^\
+      \ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/kube-controller-manager.log\\n  pos_file /var/log/gcp-kube-controller-manager.log.pos\\\
+      n  tag kube-controller-manager\\n\\u003c/source\\u003e\\n\\n# Example:\\n# W0204\
+      \ 06:49:18.239674       7 reflector.go:245] pkg/scheduler/factory/factory.go:193:\
+      \ watch of *api.Service ended with: 401: The event in requested index is outdated\
+      \ and cleared (the requested history has been cleared [2578313/2577886]) [2579312]\\\
+      n\\u003csource\\u003e\\n  @type tail\\n  format multiline\\n  multiline_flush_interval\
+      \ 5s\\n  format_firstline /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\\
+      u003e\\\\w)(?\\u003ctime\\u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\
+      \\d+)\\\\s+(?\\u003csource\\u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\\
+      n  time_format %m%d %H:%M:%S.%N\\n  path /var/log/kube-scheduler.log\\n  pos_file\
+      \ /var/log/gcp-kube-scheduler.log.pos\\n  tag kube-scheduler\\n\\u003c/source\\\
+      u003e\\n\\n# Example:\\n# I1104 10:36:20.242766       5 rescheduler.go:73] Running\
+      \ Rescheduler\\n\\u003csource\\u003e\\n  @type tail\\n  format multiline\\n\
+      \  multiline_flush_interval 5s\\n  format_firstline /^\\\\w\\\\d{4}/\\n  format1\
+      \ /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\\d{4} [^\\\\s]*)\\\\\
+      s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^ \\\\]]+)\\\\] (?\\\
+      u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\n  path /var/log/rescheduler.log\\\
+      n  pos_file /var/log/gcp-rescheduler.log.pos\\n  tag rescheduler\\n\\u003c/source\\\
+      u003e\\n\\n# Example:\\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+      \ Reading config from path /etc/gce.conf\\n\\u003csource\\u003e\\n  @type tail\\\
+      n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline /^\\\
+      \\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\
+      \\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^\
+      \ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/glbc.log\\n  pos_file /var/log/gcp-glbc.log.pos\\n  tag glbc\\\
+      n\\u003c/source\\u003e\\n\\n# Example:\\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+      \ Reading config from path /etc/gce.conf\\n\\u003csource\\u003e\\n  @type tail\\\
+      n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline /^\\\
+      \\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\
+      \\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^\
+      \ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/cluster-autoscaler.log\\n  pos_file /var/log/gcp-cluster-autoscaler.log.pos\\\
+      n  tag cluster-autoscaler\\n\\u003c/source\\u003e\\n\\n# Logs from systemd-journal\
+      \ for interesting services.\\n# TODO(random-liu): Keep this for compatibility,\
+      \ remove this after\\n# cri container runtime rolls out.\\n\\u003csource\\u003e\\\
+      n  @type systemd\\n  filters [{ \\\"_SYSTEMD_UNIT\\\": \\\"docker.service\\\"\
+      \ }]\\n  pos_file /var/log/gcp-journald-docker.pos\\n  read_from_head true\\\
+      n  tag docker\\n\\u003c/source\\u003e\\n\\n\\u003csource\\u003e\\n  @type systemd\\\
+      n  filters [{ \\\"_SYSTEMD_UNIT\\\": \\\"containerd.service\\\" }]\\n  pos_file\
+      \ /var/log/gcp-journald-container-runtime.pos\\n  read_from_head true\\n  tag\
+      \ container-runtime\\n\\u003c/source\\u003e\\n\\n\\u003csource\\u003e\\n  @type\
+      \ systemd\\n  filters [{ \\\"_SYSTEMD_UNIT\\\": \\\"kubelet.service\\\" }]\\\
+      n  pos_file /var/log/gcp-journald-kubelet.pos\\n  read_from_head true\\n  tag\
+      \ kubelet\\n\\u003c/source\\u003e\\n\\n\\u003csource\\u003e\\n  @type systemd\\\
+      n  filters [{ \\\"_SYSTEMD_UNIT\\\": \\\"node-problem-detector.service\\\" }]\\\
+      n  pos_file /var/log/gcp-journald-node-problem-detector.pos\\n  read_from_head\
+      \ true\\n  tag node-problem-detector\\n\\u003c/source\\u003e\"},\"kind\":\"\
+      ConfigMap\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\"},\"name\":\"fluentd-gcp-config-old-v1.2.5\",\"namespace\":\"\
+      kube-system\"}}\n"
+  uid: "9f5c12c3-5762-11e9-a030-42010a96010e"
+  name: "fluentd-gcp-config-old-v1.2.5"
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    nirmata.io/configmap.name: "fluentd-gcp-config-old-v1.2.5"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  containers.input.conf: "# This configuration file for Fluentd is used\n# to watch\
+    \ changes to Docker log files that live in the\n# directory /var/lib/docker/containers/\
+    \ and are symbolically\n# linked to from the /var/log/containers directory using\
+    \ names that capture the\n# pod name and container name. These logs are then submitted\
+    \ to\n# Google Cloud Logging which assumes the installation of the cloud-logging\
+    \ plug-in.\n#\n# Example\n# =======\n# A line in the Docker log file might look\
+    \ like this JSON:\n#\n# {\"log\":\"2014/09/25 21:15:03 Got request with path wombat\\\
+    \\n\",\n#  \"stream\":\"stderr\",\n#   \"time\":\"2014-09-25T21:15:03.499185026Z\"\
+    }\n#\n# The original tag is derived from the log file's location.\n# For example\
+    \ a Docker container's logs might be in the directory:\n#  /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b\n\
+    # and in the file:\n#  997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\n\
+    # where 997599971ee6... is the Docker ID of the running container.\n# The Kubernetes\
+    \ kubelet makes a symbolic link to this file on the host\n# machine in the /var/log/containers\
+    \ directory which includes the pod name,\n# the namespace name and the Kubernetes\
+    \ container name:\n#    synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\n\
+    #    ->\n#    /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\n\
+    # The /var/log directory on the host is mapped to the /var/log directory in the\
+    \ container\n# running this instance of Fluentd and we end up collecting the file:\n\
+    #   /var/log/containers/synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\n\
+    # This results in the tag:\n#  var.log.containers.synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\n\
+    # where 'synthetic-logger-0.25lps-pod' is the pod name, 'default' is the\n# namespace\
+    \ name, 'synth-lgr' is the container name and '997599971ee6..' is\n# the container\
+    \ ID.\n# The record reformer is used to extract pod_name, namespace_name and\n\
+    # container_name from the tag and set them in a local_resource_id in the\n# format\
+    \ of:\n# 'k8s_container.<NAMESPACE_NAME>.<POD_NAME>.<CONTAINER_NAME>'.\n# The\
+    \ reformer also changes the tags to 'stderr' or 'stdout' based on the\n# value\
+    \ of 'stream'.\n# local_resource_id is later used by google_cloud plugin to determine\
+    \ the\n# monitored resource to ingest logs against.\n\n# Json Log Example:\n#\
+    \ {\"log\":\"[info:2016-02-16T16:04:05.930-08:00] Some log text here\\n\",\"stream\"\
+    :\"stdout\",\"time\":\"2016-02-17T00:04:05.931087621Z\"}\n# CRI Log Example:\n\
+    # 2016-02-17T00:04:05.931087621Z stdout F [info:2016-02-16T16:04:05.930-08:00]\
+    \ Some log text here\n<source>\n  @type tail\n  path /var/log/containers/*.log\n\
+    \  pos_file /var/log/gcp-containers.log.pos\n  # Tags at this point are in the\
+    \ format of:\n  # reform.var.log.containers.<POD_NAME>_<NAMESPACE_NAME>_<CONTAINER_NAME>-<CONTAINER_ID>.log\n\
+    \  tag reform.*\n  read_from_head true\n  <parse>\n    @type multi_format\n  \
+    \  <pattern>\n      format json\n      time_key time\n      time_format %Y-%m-%dT%H:%M:%S.%NZ\n\
+    \    </pattern>\n    <pattern>\n      format /^(?<time>.+) (?<stream>stdout|stderr)\
+    \ [^ ]* (?<log>.*)$/\n      time_format %Y-%m-%dT%H:%M:%S.%N%:z\n    </pattern>\n\
+    \  </parse>\n</source>\n\n<filter reform.**>\n  @type parser\n  format /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<log>.*)/\n\
+    \  reserve_data true\n  suppress_parse_error_log true\n  emit_invalid_record_to_error\
+    \ false\n  key_name log\n</filter>\n\n<match reform.**>\n  @type record_reformer\n\
+    \  enable_ruby true\n  <record>\n    # Extract local_resource_id from tag for\
+    \ 'k8s_container' monitored\n    # resource. The format is:\n    # 'k8s_container.<namespace_name>.<pod_name>.<container_name>'.\n\
+    \    \"logging.googleapis.com/local_resource_id\" ${\"k8s_container.#{tag_suffix[4].rpartition('.')[0].split('_')[1]}.#{tag_suffix[4].rpartition('.')[0].split('_')[0]}.#{tag_suffix[4].rpartition('.')[0].split('_')[2].rpartition('-')[0]}\"\
+    }\n    # Rename the field 'log' to a more generic field 'message'. This way the\n\
+    \    # fluent-plugin-google-cloud knows to flatten the field as textPayload\n\
+    \    # instead of jsonPayload after extracting 'time', 'severity' and\n    # 'stream'\
+    \ from the record.\n    message ${record['log']}\n    # If 'severity' is not set,\
+    \ assume stderr is ERROR and stdout is INFO.\n    severity ${record['severity']\
+    \ || if record['stream'] == 'stderr' then 'ERROR' else 'INFO' end}\n  </record>\n\
+    \  tag ${if record['stream'] == 'stderr' then 'raw.stderr' else 'raw.stdout' end}\n\
+    \  remove_keys stream,log\n</match>\n\n# Detect exceptions in the log output and\
+    \ forward them as one log entry.\n<match {raw.stderr,raw.stdout}>\n  @type detect_exceptions\n\
+    \n  remove_tag_prefix raw\n  message message\n  stream \"logging.googleapis.com/local_resource_id\"\
+    \n  multiline_flush_interval 5\n  max_bytes 500000\n  max_lines 1000\n</match>"
+  output.conf: "# This match is placed before the all-matching output to provide metric\n\
+    # exporter with a process start timestamp for correct exporting of\n# cumulative\
+    \ metrics to Stackdriver.\n<match process_start>\n  @type prometheus\n\n  <metric>\n\
+    \    type gauge\n    name process_start_time_seconds\n    desc Timestamp of the\
+    \ process start in seconds\n    key process_start_timestamp\n  </metric>\n</match>\n\
+    \n# This filter allows to count the number of log entries read by fluentd\n# before\
+    \ they are processed by the output plugin. This in turn allows to\n# monitor the\
+    \ number of log entries that were read but never sent, e.g.\n# because of liveness\
+    \ probe removing buffer.\n<filter **>\n  @type prometheus\n  <metric>\n    type\
+    \ counter\n    name logging_entry_count\n    desc Total number of log entries\
+    \ generated by either application containers or system components\n  </metric>\n\
+    </filter>\n\n# This section is exclusive for k8s_container logs. Those come with\n\
+    # 'stderr'/'stdout' tags.\n# TODO(instrumentation): Reconsider this workaround\
+    \ later.\n# Trim the entries which exceed slightly less than 100KB, to avoid\n\
+    # dropping them. It is a necessity, because Stackdriver only supports\n# entries\
+    \ that are up to 100KB in size.\n<filter {stderr,stdout}>\n  @type record_transformer\n\
+    \  enable_ruby true\n  <record>\n    message ${record['message'].length > 100000\
+    \ ? \"[Trimmed]#{record['message'][0..100000]}...\" : record['message']}\n  </record>\n\
+    </filter>\n\n# Do not collect fluentd's own logs to avoid infinite loops.\n<match\
+    \ fluent.**>\n  @type null\n</match>\n\n# Add a unique insertId to each log entry\
+    \ that doesn't already have it.\n# This helps guarantee the order and prevent\
+    \ log duplication.\n<filter **>\n  @type add_insert_ids\n</filter>\n\n# This section\
+    \ is exclusive for k8s_container logs. These logs come with\n# 'stderr'/'stdout'\
+    \ tags.\n# We use a separate output stanza for 'k8s_node' logs with a smaller\
+    \ buffer\n# because node logs are less important than user's container logs.\n\
+    <match {stderr,stdout}>\n  @type google_cloud\n\n  # Try to detect JSON formatted\
+    \ log entries.\n  detect_json true\n  # Collect metrics in Prometheus registry\
+    \ about plugin activity.\n  enable_monitoring true\n  monitoring_type prometheus\n\
+    \  # Allow log entries from multiple containers to be sent in the same request.\n\
+    \  split_logs_by_tag false\n  # Set the buffer type to file to improve the reliability\
+    \ and reduce the memory consumption\n  buffer_type file\n  buffer_path /var/log/fluentd-buffers/kubernetes.containers.buffer\n\
+    \  # Set queue_full action to block because we want to pause gracefully\n  # in\
+    \ case of the off-the-limits load instead of throwing an exception\n  buffer_queue_full_action\
+    \ block\n  # Set the chunk limit conservatively to avoid exceeding the recommended\n\
+    \  # chunk size of 5MB per write request.\n  buffer_chunk_limit 512k\n  # Cap\
+    \ the combined memory usage of this buffer and the one below to\n  # 512KiB/chunk\
+    \ * (6 + 2) chunks = 4 MiB\n  buffer_queue_limit 6\n  # Never wait more than 5\
+    \ seconds before flushing logs in the non-error case.\n  flush_interval 5s\n \
+    \ # Never wait longer than 30 seconds between retries.\n  max_retry_wait 30\n\
+    \  # Disable the limit on the number of retries (retry forever).\n  disable_retry_limit\n\
+    \  # Use multiple threads for processing.\n  num_threads 2\n  use_grpc true\n\
+    \  # Skip timestamp adjustment as this is in a controlled environment with\n \
+    \ # known timestamp format. This helps with CPU usage.\n  adjust_invalid_timestamps\
+    \ false\n</match>\n\n# Attach local_resource_id for 'k8s_node' monitored resource.\n\
+    <filter **>\n  @type record_transformer\n  enable_ruby true\n  <record>\n    \"\
+    logging.googleapis.com/local_resource_id\" ${\"k8s_node.#{ENV['NODE_NAME']}\"\
+    }\n  </record>\n</filter>\n\n# This section is exclusive for 'k8s_node' logs.\
+    \ These logs come with tags\n# that are neither 'stderr' or 'stdout'.\n# We use\
+    \ a separate output stanza for 'k8s_container' logs with a larger\n# buffer because\
+    \ user's container logs are more important than node logs.\n<match **>\n  @type\
+    \ google_cloud\n\n  detect_json true\n  enable_monitoring true\n  monitoring_type\
+    \ prometheus\n  # Allow entries from multiple system logs to be sent in the same\
+    \ request.\n  split_logs_by_tag false\n  detect_subservice false\n  buffer_type\
+    \ file\n  buffer_path /var/log/fluentd-buffers/kubernetes.system.buffer\n  buffer_queue_full_action\
+    \ block\n  buffer_chunk_limit 512k\n  buffer_queue_limit 2\n  flush_interval 5s\n\
+    \  max_retry_wait 30\n  disable_retry_limit\n  num_threads 2\n  use_grpc true\n\
+    \  # Skip timestamp adjustment as this is in a controlled environment with\n \
+    \ # known timestamp format. This helps with CPU usage.\n  adjust_invalid_timestamps\
+    \ false\n</match>"
+  system.input.conf: "# Example:\n# Dec 21 23:17:22 gke-foo-1-1-4b5cbd14-node-4eoj\
+    \ startupscript: Finished running startup script /var/run/google.startup.script\n\
+    <source>\n  @type tail\n  format syslog\n  path /var/log/startupscript.log\n \
+    \ pos_file /var/log/gcp-startupscript.log.pos\n  tag startupscript\n</source>\n\
+    \n# Examples:\n# time=\"2016-02-04T06:51:03.053580605Z\" level=info msg=\"GET\
+    \ /containers/json\"\n# time=\"2016-02-04T07:53:57.505612354Z\" level=error msg=\"\
+    HTTP Error\" err=\"No such image: -f\" statusCode=404\n# TODO(random-liu): Remove\
+    \ this after cri container runtime rolls out.\n<source>\n  @type tail\n  format\
+    \ /^time=\"(?<time>[^)]*)\" level=(?<severity>[^ ]*) msg=\"(?<message>[^\"]*)\"\
+    ( err=\"(?<error>[^\"]*)\")?( statusCode=($<status_code>\\d+))?/\n  path /var/log/docker.log\n\
+    \  pos_file /var/log/gcp-docker.log.pos\n  tag docker\n</source>\n\n# Example:\n\
+    # 2016/02/04 06:52:38 filePurge: successfully removed file /var/etcd/data/member/wal/00000000000006d0-00000000010a23d1.wal\n\
+    <source>\n  @type tail\n  # Not parsing this, because it doesn't have anything\
+    \ particularly useful to\n  # parse out of it (like severities).\n  format none\n\
+    \  path /var/log/etcd.log\n  pos_file /var/log/gcp-etcd.log.pos\n  tag etcd\n\
+    </source>\n\n# Multi-line parsing is required for all the kube logs because very\
+    \ large log\n# statements, such as those that include entire object bodies, get\
+    \ split into\n# multiple lines by glog.\n\n# Example:\n# I0204 07:32:30.020537\
+    \    3368 server.go:1048] POST /stats/container/: (13.972191ms) 200 [[Go-http-client/1.1]\
+    \ 10.244.1.3:40537]\n<source>\n  @type tail\n  format multiline\n  multiline_flush_interval\
+    \ 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\w)(?<time>\\\
+    d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n  time_format\
+    \ %m%d %H:%M:%S.%N\n  path /var/log/kubelet.log\n  pos_file /var/log/gcp-kubelet.log.pos\n\
+    \  tag kubelet\n</source>\n\n# Example:\n# I1118 21:26:53.975789       6 proxier.go:1096]\
+    \ Port \"nodePort for kube-system/default-http-backend:http\" (:31429/tcp) was\
+    \ open before and is still needed\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/kube-proxy.log\n  pos_file /var/log/gcp-kube-proxy.log.pos\n\
+    \  tag kube-proxy\n</source>\n\n# Example:\n# I0204 07:00:19.604280       5 handlers.go:131]\
+    \ GET /api/v1/nodes: (1.624207ms) 200 [[kube-controller-manager/v1.1.3 (linux/amd64)\
+    \ kubernetes/6a81b50] 127.0.0.1:38266]\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/kube-apiserver.log\n  pos_file\
+    \ /var/log/gcp-kube-apiserver.log.pos\n  tag kube-apiserver\n</source>\n\n# Example:\n\
+    # I0204 06:55:31.872680       5 servicecontroller.go:277] LB already exists and\
+    \ doesn't need update for service kube-system/kube-ui\n<source>\n  @type tail\n\
+    \  format multiline\n  multiline_flush_interval 5s\n  format_firstline /^\\w\\\
+    d{4}/\n  format1 /^(?<severity>\\w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^\
+    \ \\]]+)\\] (?<message>.*)/\n  time_format %m%d %H:%M:%S.%N\n  path /var/log/kube-controller-manager.log\n\
+    \  pos_file /var/log/gcp-kube-controller-manager.log.pos\n  tag kube-controller-manager\n\
+    </source>\n\n# Example:\n# W0204 06:49:18.239674       7 reflector.go:245] pkg/scheduler/factory/factory.go:193:\
+    \ watch of *api.Service ended with: 401: The event in requested index is outdated\
+    \ and cleared (the requested history has been cleared [2578313/2577886]) [2579312]\n\
+    <source>\n  @type tail\n  format multiline\n  multiline_flush_interval 5s\n  format_firstline\
+    \ /^\\w\\d{4}/\n  format1 /^(?<severity>\\w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\\
+    d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n  time_format %m%d %H:%M:%S.%N\n\
+    \  path /var/log/kube-scheduler.log\n  pos_file /var/log/gcp-kube-scheduler.log.pos\n\
+    \  tag kube-scheduler\n</source>\n\n# Example:\n# I1104 10:36:20.242766      \
+    \ 5 rescheduler.go:73] Running Rescheduler\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/rescheduler.log\n  pos_file /var/log/gcp-rescheduler.log.pos\n\
+    \  tag rescheduler\n</source>\n\n# Example:\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+    \ Reading config from path /etc/gce.conf\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/glbc.log\n  pos_file /var/log/gcp-glbc.log.pos\n\
+    \  tag glbc\n</source>\n\n# Example:\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+    \ Reading config from path /etc/gce.conf\n<source>\n  @type tail\n  format multiline\n\
+    \  multiline_flush_interval 5s\n  format_firstline /^\\w\\d{4}/\n  format1 /^(?<severity>\\\
+    w)(?<time>\\d{4} [^\\s]*)\\s+(?<pid>\\d+)\\s+(?<source>[^ \\]]+)\\] (?<message>.*)/\n\
+    \  time_format %m%d %H:%M:%S.%N\n  path /var/log/cluster-autoscaler.log\n  pos_file\
+    \ /var/log/gcp-cluster-autoscaler.log.pos\n  tag cluster-autoscaler\n</source>\n\
+    \n# Logs from systemd-journal for interesting services.\n# TODO(random-liu): Keep\
+    \ this for compatibility, remove this after\n# cri container runtime rolls out.\n\
+    <source>\n  @type systemd\n  filters [{ \"_SYSTEMD_UNIT\": \"docker.service\"\
+    \ }]\n  pos_file /var/log/gcp-journald-docker.pos\n  read_from_head true\n  tag\
+    \ docker\n</source>\n\n<source>\n  @type systemd\n  filters [{ \"_SYSTEMD_UNIT\"\
+    : \"{{ fluentd_container_runtime_service }}.service\" }]\n  pos_file /var/log/gcp-journald-container-runtime.pos\n\
+    \  read_from_head true\n  tag container-runtime\n</source>\n\n<source>\n  @type\
+    \ systemd\n  filters [{ \"_SYSTEMD_UNIT\": \"kubelet.service\" }]\n  pos_file\
+    \ /var/log/gcp-journald-kubelet.pos\n  read_from_head true\n  tag kubelet\n</source>\n\
+    \n<source>\n  @type systemd\n  filters [{ \"_SYSTEMD_UNIT\": \"node-problem-detector.service\"\
+    \ }]\n  pos_file /var/log/gcp-journald-node-problem-detector.pos\n  read_from_head\
+    \ true\n  tag node-problem-detector\n</source>\n\n# BEGIN_NODE_JOURNAL\n# Whether\
+    \ to include node-journal or not is determined when starting the\n# cluster. It\
+    \ is not changed when the cluster is already running.\n<source>\n  @type systemd\n\
+    \  pos_file /var/log/gcp-journald.pos\n  read_from_head true\n  tag node-journal\n\
+    </source>\n\n<filter node-journal>\n  @type grep\n  <exclude>\n    key _SYSTEMD_UNIT\n\
+    \    pattern ^(docker|{{ fluentd_container_runtime_service }}|kubelet|node-problem-detector)\\\
+    .service$\n  </exclude>\n</filter>\n# END_NODE_JOURNAL"
+  monitoring.conf: "# This source is used to acquire approximate process start timestamp,\n\
+    # which purpose is explained before the corresponding output plugin.\n<source>\n\
+    \  @type exec\n  command /bin/sh -c 'date +%s'\n  tag process_start\n  time_format\
+    \ %Y-%m-%d %H:%M:%S\n  keys process_start_timestamp\n</source>\n\n# This filter\
+    \ is used to convert process start timestamp to integer\n# value for correct ingestion\
+    \ in the prometheus output plugin.\n<filter process_start>\n  @type record_transformer\n\
+    \  enable_ruby true\n  auto_typecast true\n  <record>\n    process_start_timestamp\
+    \ ${record[\"process_start_timestamp\"].to_i}\n  </record>\n</filter>"
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"v1\",\"data\"\
+      :{\"containers.input.conf\":\"# This configuration file for Fluentd is used\\\
+      n# to watch changes to Docker log files that live in the\\n# directory /var/lib/docker/containers/\
+      \ and are symbolically\\n# linked to from the /var/log/containers directory\
+      \ using names that capture the\\n# pod name and container name. These logs are\
+      \ then submitted to\\n# Google Cloud Logging which assumes the installation\
+      \ of the cloud-logging plug-in.\\n#\\n# Example\\n# =======\\n# A line in the\
+      \ Docker log file might look like this JSON:\\n#\\n# {\\\"log\\\":\\\"2014/09/25\
+      \ 21:15:03 Got request with path wombat\\\\\\\\n\\\",\\n#  \\\"stream\\\":\\\
+      \"stderr\\\",\\n#   \\\"time\\\":\\\"2014-09-25T21:15:03.499185026Z\\\"}\\n#\\\
+      n# The original tag is derived from the log file's location.\\n# For example\
+      \ a Docker container's logs might be in the directory:\\n#  /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b\\\
+      n# and in the file:\\n#  997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\\\
+      n# where 997599971ee6... is the Docker ID of the running container.\\n# The\
+      \ Kubernetes kubelet makes a symbolic link to this file on the host\\n# machine\
+      \ in the /var/log/containers directory which includes the pod name,\\n# the\
+      \ namespace name and the Kubernetes container name:\\n#    synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\\\
+      n#    -\\u003e\\n#    /var/lib/docker/containers/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b/997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b-json.log\\\
+      n# The /var/log directory on the host is mapped to the /var/log directory in\
+      \ the container\\n# running this instance of Fluentd and we end up collecting\
+      \ the file:\\n#   /var/log/containers/synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\\\
+      n# This results in the tag:\\n#  var.log.containers.synthetic-logger-0.25lps-pod_default_synth-lgr-997599971ee6366d4a5920d25b79286ad45ff37a74494f262e3bc98d909d0a7b.log\\\
+      n# where 'synthetic-logger-0.25lps-pod' is the pod name, 'default' is the\\\
+      n# namespace name, 'synth-lgr' is the container name and '997599971ee6..' is\\\
+      n# the container ID.\\n# The record reformer is used to extract pod_name, namespace_name\
+      \ and\\n# container_name from the tag and set them in a local_resource_id in\
+      \ the\\n# format of:\\n# 'k8s_container.\\u003cNAMESPACE_NAME\\u003e.\\u003cPOD_NAME\\\
+      u003e.\\u003cCONTAINER_NAME\\u003e'.\\n# The reformer also changes the tags\
+      \ to 'stderr' or 'stdout' based on the\\n# value of 'stream'.\\n# local_resource_id\
+      \ is later used by google_cloud plugin to determine the\\n# monitored resource\
+      \ to ingest logs against.\\n\\n# Json Log Example:\\n# {\\\"log\\\":\\\"[info:2016-02-16T16:04:05.930-08:00]\
+      \ Some log text here\\\\n\\\",\\\"stream\\\":\\\"stdout\\\",\\\"time\\\":\\\"\
+      2016-02-17T00:04:05.931087621Z\\\"}\\n# CRI Log Example:\\n# 2016-02-17T00:04:05.931087621Z\
+      \ stdout F [info:2016-02-16T16:04:05.930-08:00] Some log text here\\n\\u003csource\\\
+      u003e\\n  @type tail\\n  path /var/log/containers/*.log\\n  pos_file /var/log/gcp-containers.log.pos\\\
+      n  # Tags at this point are in the format of:\\n  # reform.var.log.containers.\\\
+      u003cPOD_NAME\\u003e_\\u003cNAMESPACE_NAME\\u003e_\\u003cCONTAINER_NAME\\u003e-\\\
+      u003cCONTAINER_ID\\u003e.log\\n  tag reform.*\\n  read_from_head true\\n  \\\
+      u003cparse\\u003e\\n    @type multi_format\\n    \\u003cpattern\\u003e\\n  \
+      \    format json\\n      time_key time\\n      time_format %Y-%m-%dT%H:%M:%S.%NZ\\\
+      n    \\u003c/pattern\\u003e\\n    \\u003cpattern\\u003e\\n      format /^(?\\\
+      u003ctime\\u003e.+) (?\\u003cstream\\u003estdout|stderr) [^ ]* (?\\u003clog\\\
+      u003e.*)$/\\n      time_format %Y-%m-%dT%H:%M:%S.%N%:z\\n    \\u003c/pattern\\\
+      u003e\\n  \\u003c/parse\\u003e\\n\\u003c/source\\u003e\\n\\n\\u003cfilter reform.**\\\
+      u003e\\n  @type parser\\n  format /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\\
+      u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\\
+      u003e[^ \\\\]]+)\\\\] (?\\u003clog\\u003e.*)/\\n  reserve_data true\\n  suppress_parse_error_log\
+      \ true\\n  emit_invalid_record_to_error false\\n  key_name log\\n\\u003c/filter\\\
+      u003e\\n\\n\\u003cmatch reform.**\\u003e\\n  @type record_reformer\\n  enable_ruby\
+      \ true\\n  \\u003crecord\\u003e\\n    # Extract local_resource_id from tag for\
+      \ 'k8s_container' monitored\\n    # resource. The format is:\\n    # 'k8s_container.\\\
+      u003cnamespace_name\\u003e.\\u003cpod_name\\u003e.\\u003ccontainer_name\\u003e'.\\\
+      n    \\\"logging.googleapis.com/local_resource_id\\\" ${\\\"k8s_container.#{tag_suffix[4].rpartition('.')[0].split('_')[1]}.#{tag_suffix[4].rpartition('.')[0].split('_')[0]}.#{tag_suffix[4].rpartition('.')[0].split('_')[2].rpartition('-')[0]}\\\
+      \"}\\n    # Rename the field 'log' to a more generic field 'message'. This way\
+      \ the\\n    # fluent-plugin-google-cloud knows to flatten the field as textPayload\\\
+      n    # instead of jsonPayload after extracting 'time', 'severity' and\\n   \
+      \ # 'stream' from the record.\\n    message ${record['log']}\\n    # If 'severity'\
+      \ is not set, assume stderr is ERROR and stdout is INFO.\\n    severity ${record['severity']\
+      \ || if record['stream'] == 'stderr' then 'ERROR' else 'INFO' end}\\n  \\u003c/record\\\
+      u003e\\n  tag ${if record['stream'] == 'stderr' then 'raw.stderr' else 'raw.stdout'\
+      \ end}\\n  remove_keys stream,log\\n\\u003c/match\\u003e\\n\\n# Detect exceptions\
+      \ in the log output and forward them as one log entry.\\n\\u003cmatch {raw.stderr,raw.stdout}\\\
+      u003e\\n  @type detect_exceptions\\n\\n  remove_tag_prefix raw\\n  message message\\\
+      n  stream \\\"logging.googleapis.com/local_resource_id\\\"\\n  multiline_flush_interval\
+      \ 5\\n  max_bytes 500000\\n  max_lines 1000\\n\\u003c/match\\u003e\",\"monitoring.conf\"\
+      :\"# This source is used to acquire approximate process start timestamp,\\n#\
+      \ which purpose is explained before the corresponding output plugin.\\n\\u003csource\\\
+      u003e\\n  @type exec\\n  command /bin/sh -c 'date +%s'\\n  tag process_start\\\
+      n  time_format %Y-%m-%d %H:%M:%S\\n  keys process_start_timestamp\\n\\u003c/source\\\
+      u003e\\n\\n# This filter is used to convert process start timestamp to integer\\\
+      n# value for correct ingestion in the prometheus output plugin.\\n\\u003cfilter\
+      \ process_start\\u003e\\n  @type record_transformer\\n  enable_ruby true\\n\
+      \  auto_typecast true\\n  \\u003crecord\\u003e\\n    process_start_timestamp\
+      \ ${record[\\\"process_start_timestamp\\\"].to_i}\\n  \\u003c/record\\u003e\\\
+      n\\u003c/filter\\u003e\",\"output.conf\":\"# This match is placed before the\
+      \ all-matching output to provide metric\\n# exporter with a process start timestamp\
+      \ for correct exporting of\\n# cumulative metrics to Stackdriver.\\n\\u003cmatch\
+      \ process_start\\u003e\\n  @type prometheus\\n\\n  \\u003cmetric\\u003e\\n \
+      \   type gauge\\n    name process_start_time_seconds\\n    desc Timestamp of\
+      \ the process start in seconds\\n    key process_start_timestamp\\n  \\u003c/metric\\\
+      u003e\\n\\u003c/match\\u003e\\n\\n# This filter allows to count the number of\
+      \ log entries read by fluentd\\n# before they are processed by the output plugin.\
+      \ This in turn allows to\\n# monitor the number of log entries that were read\
+      \ but never sent, e.g.\\n# because of liveness probe removing buffer.\\n\\u003cfilter\
+      \ **\\u003e\\n  @type prometheus\\n  \\u003cmetric\\u003e\\n    type counter\\\
+      n    name logging_entry_count\\n    desc Total number of log entries generated\
+      \ by either application containers or system components\\n  \\u003c/metric\\\
+      u003e\\n\\u003c/filter\\u003e\\n\\n# This section is exclusive for k8s_container\
+      \ logs. Those come with\\n# 'stderr'/'stdout' tags.\\n# TODO(instrumentation):\
+      \ Reconsider this workaround later.\\n# Trim the entries which exceed slightly\
+      \ less than 100KB, to avoid\\n# dropping them. It is a necessity, because Stackdriver\
+      \ only supports\\n# entries that are up to 100KB in size.\\n\\u003cfilter {stderr,stdout}\\\
+      u003e\\n  @type record_transformer\\n  enable_ruby true\\n  \\u003crecord\\\
+      u003e\\n    message ${record['message'].length \\u003e 100000 ? \\\"[Trimmed]#{record['message'][0..100000]}...\\\
+      \" : record['message']}\\n  \\u003c/record\\u003e\\n\\u003c/filter\\u003e\\\
+      n\\n# Do not collect fluentd's own logs to avoid infinite loops.\\n\\u003cmatch\
+      \ fluent.**\\u003e\\n  @type null\\n\\u003c/match\\u003e\\n\\n# Add a unique\
+      \ insertId to each log entry that doesn't already have it.\\n# This helps guarantee\
+      \ the order and prevent log duplication.\\n\\u003cfilter **\\u003e\\n  @type\
+      \ add_insert_ids\\n\\u003c/filter\\u003e\\n\\n# This section is exclusive for\
+      \ k8s_container logs. These logs come with\\n# 'stderr'/'stdout' tags.\\n# We\
+      \ use a separate output stanza for 'k8s_node' logs with a smaller buffer\\n#\
+      \ because node logs are less important than user's container logs.\\n\\u003cmatch\
+      \ {stderr,stdout}\\u003e\\n  @type google_cloud\\n\\n  # Try to detect JSON\
+      \ formatted log entries.\\n  detect_json true\\n  # Collect metrics in Prometheus\
+      \ registry about plugin activity.\\n  enable_monitoring true\\n  monitoring_type\
+      \ prometheus\\n  # Allow log entries from multiple containers to be sent in\
+      \ the same request.\\n  split_logs_by_tag false\\n  # Set the buffer type to\
+      \ file to improve the reliability and reduce the memory consumption\\n  buffer_type\
+      \ file\\n  buffer_path /var/log/fluentd-buffers/kubernetes.containers.buffer\\\
+      n  # Set queue_full action to block because we want to pause gracefully\\n \
+      \ # in case of the off-the-limits load instead of throwing an exception\\n \
+      \ buffer_queue_full_action block\\n  # Set the chunk limit conservatively to\
+      \ avoid exceeding the recommended\\n  # chunk size of 5MB per write request.\\\
+      n  buffer_chunk_limit 512k\\n  # Cap the combined memory usage of this buffer\
+      \ and the one below to\\n  # 512KiB/chunk * (6 + 2) chunks = 4 MiB\\n  buffer_queue_limit\
+      \ 6\\n  # Never wait more than 5 seconds before flushing logs in the non-error\
+      \ case.\\n  flush_interval 5s\\n  # Never wait longer than 30 seconds between\
+      \ retries.\\n  max_retry_wait 30\\n  # Disable the limit on the number of retries\
+      \ (retry forever).\\n  disable_retry_limit\\n  # Use multiple threads for processing.\\\
+      n  num_threads 2\\n  use_grpc true\\n  # Skip timestamp adjustment as this is\
+      \ in a controlled environment with\\n  # known timestamp format. This helps\
+      \ with CPU usage.\\n  adjust_invalid_timestamps false\\n\\u003c/match\\u003e\\\
+      n\\n# Attach local_resource_id for 'k8s_node' monitored resource.\\n\\u003cfilter\
+      \ **\\u003e\\n  @type record_transformer\\n  enable_ruby true\\n  \\u003crecord\\\
+      u003e\\n    \\\"logging.googleapis.com/local_resource_id\\\" ${\\\"k8s_node.#{ENV['NODE_NAME']}\\\
+      \"}\\n  \\u003c/record\\u003e\\n\\u003c/filter\\u003e\\n\\n# This section is\
+      \ exclusive for 'k8s_node' logs. These logs come with tags\\n# that are neither\
+      \ 'stderr' or 'stdout'.\\n# We use a separate output stanza for 'k8s_container'\
+      \ logs with a larger\\n# buffer because user's container logs are more important\
+      \ than node logs.\\n\\u003cmatch **\\u003e\\n  @type google_cloud\\n\\n  detect_json\
+      \ true\\n  enable_monitoring true\\n  monitoring_type prometheus\\n  # Allow\
+      \ entries from multiple system logs to be sent in the same request.\\n  split_logs_by_tag\
+      \ false\\n  detect_subservice false\\n  buffer_type file\\n  buffer_path /var/log/fluentd-buffers/kubernetes.system.buffer\\\
+      n  buffer_queue_full_action block\\n  buffer_chunk_limit 512k\\n  buffer_queue_limit\
+      \ 2\\n  flush_interval 5s\\n  max_retry_wait 30\\n  disable_retry_limit\\n \
+      \ num_threads 2\\n  use_grpc true\\n  # Skip timestamp adjustment as this is\
+      \ in a controlled environment with\\n  # known timestamp format. This helps\
+      \ with CPU usage.\\n  adjust_invalid_timestamps false\\n\\u003c/match\\u003e\"\
+      ,\"system.input.conf\":\"# Example:\\n# Dec 21 23:17:22 gke-foo-1-1-4b5cbd14-node-4eoj\
+      \ startupscript: Finished running startup script /var/run/google.startup.script\\\
+      n\\u003csource\\u003e\\n  @type tail\\n  format syslog\\n  path /var/log/startupscript.log\\\
+      n  pos_file /var/log/gcp-startupscript.log.pos\\n  tag startupscript\\n\\u003c/source\\\
+      u003e\\n\\n# Examples:\\n# time=\\\"2016-02-04T06:51:03.053580605Z\\\" level=info\
+      \ msg=\\\"GET /containers/json\\\"\\n# time=\\\"2016-02-04T07:53:57.505612354Z\\\
+      \" level=error msg=\\\"HTTP Error\\\" err=\\\"No such image: -f\\\" statusCode=404\\\
+      n# TODO(random-liu): Remove this after cri container runtime rolls out.\\n\\\
+      u003csource\\u003e\\n  @type tail\\n  format /^time=\\\"(?\\u003ctime\\u003e[^)]*)\\\
+      \" level=(?\\u003cseverity\\u003e[^ ]*) msg=\\\"(?\\u003cmessage\\u003e[^\\\"\
+      ]*)\\\"( err=\\\"(?\\u003cerror\\u003e[^\\\"]*)\\\")?( statusCode=($\\u003cstatus_code\\\
+      u003e\\\\d+))?/\\n  path /var/log/docker.log\\n  pos_file /var/log/gcp-docker.log.pos\\\
+      n  tag docker\\n\\u003c/source\\u003e\\n\\n# Example:\\n# 2016/02/04 06:52:38\
+      \ filePurge: successfully removed file /var/etcd/data/member/wal/00000000000006d0-00000000010a23d1.wal\\\
+      n\\u003csource\\u003e\\n  @type tail\\n  # Not parsing this, because it doesn't\
+      \ have anything particularly useful to\\n  # parse out of it (like severities).\\\
+      n  format none\\n  path /var/log/etcd.log\\n  pos_file /var/log/gcp-etcd.log.pos\\\
+      n  tag etcd\\n\\u003c/source\\u003e\\n\\n# Multi-line parsing is required for\
+      \ all the kube logs because very large log\\n# statements, such as those that\
+      \ include entire object bodies, get split into\\n# multiple lines by glog.\\\
+      n\\n# Example:\\n# I0204 07:32:30.020537    3368 server.go:1048] POST /stats/container/:\
+      \ (13.972191ms) 200 [[Go-http-client/1.1] 10.244.1.3:40537]\\n\\u003csource\\\
+      u003e\\n  @type tail\\n  format multiline\\n  multiline_flush_interval 5s\\\
+      n  format_firstline /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\
+      \\w)(?\\u003ctime\\u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\
+      \\s+(?\\u003csource\\u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format\
+      \ %m%d %H:%M:%S.%N\\n  path /var/log/kubelet.log\\n  pos_file /var/log/gcp-kubelet.log.pos\\\
+      n  tag kubelet\\n\\u003c/source\\u003e\\n\\n# Example:\\n# I1118 21:26:53.975789\
+      \       6 proxier.go:1096] Port \\\"nodePort for kube-system/default-http-backend:http\\\
+      \" (:31429/tcp) was open before and is still needed\\n\\u003csource\\u003e\\\
+      n  @type tail\\n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline\
+      \ /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\\
+      u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\\
+      u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/kube-proxy.log\\n  pos_file /var/log/gcp-kube-proxy.log.pos\\\
+      n  tag kube-proxy\\n\\u003c/source\\u003e\\n\\n# Example:\\n# I0204 07:00:19.604280\
+      \       5 handlers.go:131] GET /api/v1/nodes: (1.624207ms) 200 [[kube-controller-manager/v1.1.3\
+      \ (linux/amd64) kubernetes/6a81b50] 127.0.0.1:38266]\\n\\u003csource\\u003e\\\
+      n  @type tail\\n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline\
+      \ /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\\
+      u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\\
+      u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/kube-apiserver.log\\n  pos_file /var/log/gcp-kube-apiserver.log.pos\\\
+      n  tag kube-apiserver\\n\\u003c/source\\u003e\\n\\n# Example:\\n# I0204 06:55:31.872680\
+      \       5 servicecontroller.go:277] LB already exists and doesn't need update\
+      \ for service kube-system/kube-ui\\n\\u003csource\\u003e\\n  @type tail\\n \
+      \ format multiline\\n  multiline_flush_interval 5s\\n  format_firstline /^\\\
+      \\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\
+      \\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^\
+      \ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/kube-controller-manager.log\\n  pos_file /var/log/gcp-kube-controller-manager.log.pos\\\
+      n  tag kube-controller-manager\\n\\u003c/source\\u003e\\n\\n# Example:\\n# W0204\
+      \ 06:49:18.239674       7 reflector.go:245] pkg/scheduler/factory/factory.go:193:\
+      \ watch of *api.Service ended with: 401: The event in requested index is outdated\
+      \ and cleared (the requested history has been cleared [2578313/2577886]) [2579312]\\\
+      n\\u003csource\\u003e\\n  @type tail\\n  format multiline\\n  multiline_flush_interval\
+      \ 5s\\n  format_firstline /^\\\\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\\
+      u003e\\\\w)(?\\u003ctime\\u003e\\\\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\
+      \\d+)\\\\s+(?\\u003csource\\u003e[^ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\\
+      n  time_format %m%d %H:%M:%S.%N\\n  path /var/log/kube-scheduler.log\\n  pos_file\
+      \ /var/log/gcp-kube-scheduler.log.pos\\n  tag kube-scheduler\\n\\u003c/source\\\
+      u003e\\n\\n# Example:\\n# I1104 10:36:20.242766       5 rescheduler.go:73] Running\
+      \ Rescheduler\\n\\u003csource\\u003e\\n  @type tail\\n  format multiline\\n\
+      \  multiline_flush_interval 5s\\n  format_firstline /^\\\\w\\\\d{4}/\\n  format1\
+      \ /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\\d{4} [^\\\\s]*)\\\\\
+      s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^ \\\\]]+)\\\\] (?\\\
+      u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\n  path /var/log/rescheduler.log\\\
+      n  pos_file /var/log/gcp-rescheduler.log.pos\\n  tag rescheduler\\n\\u003c/source\\\
+      u003e\\n\\n# Example:\\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+      \ Reading config from path /etc/gce.conf\\n\\u003csource\\u003e\\n  @type tail\\\
+      n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline /^\\\
+      \\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\
+      \\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^\
+      \ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/glbc.log\\n  pos_file /var/log/gcp-glbc.log.pos\\n  tag glbc\\\
+      n\\u003c/source\\u003e\\n\\n# Example:\\n# I0603 15:31:05.793605       6 cluster_manager.go:230]\
+      \ Reading config from path /etc/gce.conf\\n\\u003csource\\u003e\\n  @type tail\\\
+      n  format multiline\\n  multiline_flush_interval 5s\\n  format_firstline /^\\\
+      \\w\\\\d{4}/\\n  format1 /^(?\\u003cseverity\\u003e\\\\w)(?\\u003ctime\\u003e\\\
+      \\d{4} [^\\\\s]*)\\\\s+(?\\u003cpid\\u003e\\\\d+)\\\\s+(?\\u003csource\\u003e[^\
+      \ \\\\]]+)\\\\] (?\\u003cmessage\\u003e.*)/\\n  time_format %m%d %H:%M:%S.%N\\\
+      n  path /var/log/cluster-autoscaler.log\\n  pos_file /var/log/gcp-cluster-autoscaler.log.pos\\\
+      n  tag cluster-autoscaler\\n\\u003c/source\\u003e\\n\\n# Logs from systemd-journal\
+      \ for interesting services.\\n# TODO(random-liu): Keep this for compatibility,\
+      \ remove this after\\n# cri container runtime rolls out.\\n\\u003csource\\u003e\\\
+      n  @type systemd\\n  filters [{ \\\"_SYSTEMD_UNIT\\\": \\\"docker.service\\\"\
+      \ }]\\n  pos_file /var/log/gcp-journald-docker.pos\\n  read_from_head true\\\
+      n  tag docker\\n\\u003c/source\\u003e\\n\\n\\u003csource\\u003e\\n  @type systemd\\\
+      n  filters [{ \\\"_SYSTEMD_UNIT\\\": \\\"{{ fluentd_container_runtime_service\
+      \ }}.service\\\" }]\\n  pos_file /var/log/gcp-journald-container-runtime.pos\\\
+      n  read_from_head true\\n  tag container-runtime\\n\\u003c/source\\u003e\\n\\\
+      n\\u003csource\\u003e\\n  @type systemd\\n  filters [{ \\\"_SYSTEMD_UNIT\\\"\
+      : \\\"kubelet.service\\\" }]\\n  pos_file /var/log/gcp-journald-kubelet.pos\\\
+      n  read_from_head true\\n  tag kubelet\\n\\u003c/source\\u003e\\n\\n\\u003csource\\\
+      u003e\\n  @type systemd\\n  filters [{ \\\"_SYSTEMD_UNIT\\\": \\\"node-problem-detector.service\\\
+      \" }]\\n  pos_file /var/log/gcp-journald-node-problem-detector.pos\\n  read_from_head\
+      \ true\\n  tag node-problem-detector\\n\\u003c/source\\u003e\\n\\n# BEGIN_NODE_JOURNAL\\\
+      n# Whether to include node-journal or not is determined when starting the\\\
+      n# cluster. It is not changed when the cluster is already running.\\n\\u003csource\\\
+      u003e\\n  @type systemd\\n  pos_file /var/log/gcp-journald.pos\\n  read_from_head\
+      \ true\\n  tag node-journal\\n\\u003c/source\\u003e\\n\\n\\u003cfilter node-journal\\\
+      u003e\\n  @type grep\\n  \\u003cexclude\\u003e\\n    key _SYSTEMD_UNIT\\n  \
+      \  pattern ^(docker|{{ fluentd_container_runtime_service }}|kubelet|node-problem-detector)\\\
+      \\.service$\\n  \\u003c/exclude\\u003e\\n\\u003c/filter\\u003e\\n# END_NODE_JOURNAL\"\
+      },\"kind\":\"ConfigMap\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\"},\"name\":\"fluentd-gcp-config-v1.2.5\",\"namespace\":\"kube-system\"\
+      }}\n"
+  uid: "9f5f5074-5762-11e9-a030-42010a96010e"
+  name: "fluentd-gcp-config-v1.2.5"
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    nirmata.io/configmap.name: "fluentd-gcp-config-v1.2.5"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  requestheader-allowed-names: "[\"aggregator\"]"
+  requestheader-group-headers: "[\"X-Remote-Group\"]"
+  requestheader-username-headers: "[\"X-Remote-User\"]"
+  client-ca-file: "-----BEGIN CERTIFICATE-----\nMIIDDDCCAfSgAwIBAgIRALQ+vbX9e2q00VZdtIMEFRMwDQYJKoZIhvcNAQELBQAw\n\
+    LzEtMCsGA1UEAxMkYTQ0YjY0ZGItZDg0MS00ZjI1LWEyZWYtZTU4ZWI5YzgwMjI5\nMB4XDTE5MDQwNTA0MTgyNFoXDTI0MDQwMzA1MTgyNFowLzEtMCsGA1UEAxMkYTQ0\n\
+    YjY0ZGItZDg0MS00ZjI1LWEyZWYtZTU4ZWI5YzgwMjI5MIIBIjANBgkqhkiG9w0B\nAQEFAAOCAQ8AMIIBCgKCAQEA0i8Y5qTXwYbFh2SAYk5Mr7Zy7DpIZCmXoCubNQi4\n\
+    8PKTieISquF39+oJtJwAQMupdWbS7w1mIPHkhMozZWMjJl3XZUrVNjeGR7Y9ncgF\n8u7OuTtte1lT932S+WKDpNODDpJpeblTu3hn1YA0E0km0SujjjmlevJBpBgKdPqw\n\
+    oA+NYJoNEjvtSssanVCD1sBTVYV9Cg18ZIIaXycWX2ATRkQ4IVKp296dMNQMDhg1\nJzk4e85Yz+8Vc+vy5pEm3lmpmkqJrF/M5Cy5GfvOHEsla61sjN7JALJhRiQRK2Op\n\
+    itm6qVTvsPX8M7qHFZB9FsYWeO3dnEKJ10nqSr9ahZinvwIDAQABoyMwITAOBgNV\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\n\
+    fUQUc6xVtRupFBX+Xr9qKyZ3iojGRLig3KA3mE2MeP0TAUfgm5c+weu92mfOo6OD\nlB+XiXNFT7vliLx0Js+4WcPMxz/S9wH9G7R9LvpMe6+JZA0OZpmrYlnLYU/GZg1n\n\
+    Df/y1crL9SSi6esmqvfd3/516qAMUnOLHTI+fuXpqP/aczfSX1Oij4H5UhAG4wp9\nu3iiqfu5LSztOisaz1iBbYXM7iEfb0JDhXsEjfPOH+0DSZeuw1sPt1lQ3uRkJAF1\n\
+    KitV0BJQIbgIlS20NvaXrlosprheitiVFCD/2vNgUiO7eKNAPpDiIwIPdtenEPh8\nynDv2l56tQ5wuQOn5u7LcQ==\n\
+    -----END CERTIFICATE-----\n"
+  requestheader-extra-headers-prefix: "[\"X-Remote-Extra-\"]"
+  requestheader-client-ca-file: "-----BEGIN CERTIFICATE-----\nMIIDCzCCAfOgAwIBAgIQGufTZ2f+HX+IlKtuvFXu/jANBgkqhkiG9w0BAQsFADAv\n\
+    MS0wKwYDVQQDEyRlZjQ0MGEzOS0wYmIxLTQ0MzktODFkZS0wNDRmN2RlZDdmNDEw\nHhcNMTkwNDA1MDQxODQxWhcNMjQwNDAzMDUxODQxWjAvMS0wKwYDVQQDEyRlZjQ0\n\
+    MGEzOS0wYmIxLTQ0MzktODFkZS0wNDRmN2RlZDdmNDEwggEiMA0GCSqGSIb3DQEB\nAQUAA4IBDwAwggEKAoIBAQDP20fwH1RrkMz72YixhlHMFRouy2V5Hgz43kgMXXNt\n\
+    7YyrNn+arXlDMtNNlH4Uh8ojLf2JRjeOeKOxMGFt9iJljMquvaI4YHecB8XVsZ30\n41L48uwyxW0i73KRWAzxIhqpRTU/nUUcYytWHTYgNvjJ26EhA2O4sOO/IqMDQSHg\n\
+    RqPswd323ECxWfQGbfCUbPN6xNKZZq9XUkjhL+UPpfFJnt51CVZnY4Aq6fXCJylx\nv1p0/E1tZIxPb1AtYE28Q2zHrosGi2Aic8wcwW7liaB6uvdS9rpRNQABXFI/bMr/\n\
+    Tv8RmroMHXzQ/b8tSFscVLYWP1fOApLIvXNgdAcBShY/AgMBAAGjIzAhMA4GA1Ud\nDwEB/wQEAwICBDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAx\n\
+    WJczmUnGb1t9Leq3OqKU9OAC1ip6gFDwIobxrySrGia+OZAwsELRYp+V7HOc9b03\nUxCJ0TDTev12ykHQYRghRbCEL56EkqOt/Taaz2qkoAHXRYMTA3adJkE4vvZdQY5s\n\
+    Ze/m+qUqwtion+A40/ECacgUI9pTUDD8iZSPS9WiwXyTXTsQR/OLuNXheW+WEaPN\nRD9fggwfVKfYRRdbLRo53YKes54HGgp3mp9Skk2Hp8Gk8ERu3jXQxEJqhcuQ4LaU\n\
+    8ipmeLQzSLw21YTZbOZUr34pqCqER6TBAUAGPHlSh8A7gF5OCCw/WyMti1/C3kay\noo2njg+jmaOfnckw77zC\n\
+    -----END CERTIFICATE-----\n"
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "8d3f0a22-5762-11e9-a030-42010a96010e"
+  name: "extension-apiserver-authentication"
+  labels:
+    nirmata.io/configmap.name: "extension-apiserver-authentication"
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"extensions/v1beta1\"\
+      ,\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"kube-dns\",\"kubernetes.io/cluster-service\":\"\
+      true\"},\"name\":\"kube-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"selector\"\
+      :{\"matchLabels\":{\"k8s-app\":\"kube-dns\"}},\"strategy\":{\"rollingUpdate\"\
+      :{\"maxSurge\":\"10%\",\"maxUnavailable\":0}},\"template\":{\"metadata\":{\"\
+      annotations\":{\"scheduler.alpha.kubernetes.io/critical-pod\":\"\",\"seccomp.security.alpha.kubernetes.io/pod\"\
+      :\"docker/default\"},\"labels\":{\"k8s-app\":\"kube-dns\"}},\"spec\":{\"containers\"\
+      :[{\"args\":[\"--domain=cluster.local.\",\"--dns-port=10053\",\"--config-dir=/kube-dns-config\"\
+      ,\"--v=2\"],\"env\":[{\"name\":\"PROMETHEUS_PORT\",\"value\":\"10055\"}],\"\
+      image\":\"k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.13\",\"livenessProbe\":{\"\
+      failureThreshold\":5,\"httpGet\":{\"path\":\"/healthcheck/kubedns\",\"port\"\
+      :10054,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":60,\"successThreshold\"\
+      :1,\"timeoutSeconds\":5},\"name\":\"kubedns\",\"ports\":[{\"containerPort\"\
+      :10053,\"name\":\"dns-local\",\"protocol\":\"UDP\"},{\"containerPort\":10053,\"\
+      name\":\"dns-tcp-local\",\"protocol\":\"TCP\"},{\"containerPort\":10055,\"name\"\
+      :\"metrics\",\"protocol\":\"TCP\"}],\"readinessProbe\":{\"httpGet\":{\"path\"\
+      :\"/readiness\",\"port\":8081,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":3,\"\
+      timeoutSeconds\":5},\"resources\":{\"limits\":{\"memory\":\"170Mi\"},\"requests\"\
+      :{\"cpu\":\"100m\",\"memory\":\"70Mi\"}},\"volumeMounts\":[{\"mountPath\":\"\
+      /kube-dns-config\",\"name\":\"kube-dns-config\"}]},{\"args\":[\"-v=2\",\"-logtostderr\"\
+      ,\"-configDir=/etc/k8s/dns/dnsmasq-nanny\",\"-restartDnsmasq=true\",\"--\",\"\
+      -k\",\"--cache-size=1000\",\"--no-negcache\",\"--log-facility=-\",\"--server=/cluster.local/127.0.0.1#10053\"\
+      ,\"--server=/in-addr.arpa/127.0.0.1#10053\",\"--server=/ip6.arpa/127.0.0.1#10053\"\
+      ],\"image\":\"k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.13\",\"livenessProbe\"\
+      :{\"failureThreshold\":5,\"httpGet\":{\"path\":\"/healthcheck/dnsmasq\",\"port\"\
+      :10054,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":60,\"successThreshold\"\
+      :1,\"timeoutSeconds\":5},\"name\":\"dnsmasq\",\"ports\":[{\"containerPort\"\
+      :53,\"name\":\"dns\",\"protocol\":\"UDP\"},{\"containerPort\":53,\"name\":\"\
+      dns-tcp\",\"protocol\":\"TCP\"}],\"resources\":{\"requests\":{\"cpu\":\"150m\"\
+      ,\"memory\":\"20Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/k8s/dns/dnsmasq-nanny\"\
+      ,\"name\":\"kube-dns-config\"}]},{\"args\":[\"--v=2\",\"--logtostderr\",\"--probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.cluster.local,5,SRV\"\
+      ,\"--probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.cluster.local,5,SRV\"\
+      ],\"image\":\"k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.13\",\"livenessProbe\":{\"\
+      failureThreshold\":5,\"httpGet\":{\"path\":\"/metrics\",\"port\":10054,\"scheme\"\
+      :\"HTTP\"},\"initialDelaySeconds\":60,\"successThreshold\":1,\"timeoutSeconds\"\
+      :5},\"name\":\"sidecar\",\"ports\":[{\"containerPort\":10054,\"name\":\"metrics\"\
+      ,\"protocol\":\"TCP\"}],\"resources\":{\"requests\":{\"cpu\":\"10m\",\"memory\"\
+      :\"20Mi\"}}},{\"command\":[\"/monitor\",\"--source=kubedns:http://localhost:10054?whitelisted=probe_kubedns_latency_ms,probe_kubedns_errors,dnsmasq_misses,dnsmasq_hits\"\
+      ,\"--stackdriver-prefix=container.googleapis.com/internal/addons\",\"--api-override=https://monitoring.googleapis.com/\"\
+      ,\"--pod-id=$(POD_NAME)\",\"--namespace-id=$(POD_NAMESPACE)\",\"--v=2\"],\"\
+      env\":[{\"name\":\"POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"\
+      metadata.name\"}}},{\"name\":\"POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"\
+      fieldPath\":\"metadata.namespace\"}}}],\"image\":\"gcr.io/google-containers/prometheus-to-sd:v0.4.2\"\
+      ,\"name\":\"prometheus-to-sd\"}],\"dnsPolicy\":\"Default\",\"priorityClassName\"\
+      :\"system-cluster-critical\",\"serviceAccountName\":\"kube-dns\",\"tolerations\"\
+      :[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"\
+      configMap\":{\"name\":\"kube-dns\",\"optional\":true},\"name\":\"kube-dns-config\"\
+      }]}}}}\n"
+  uid: "99428af6-5762-11e9-a030-42010a96010e"
+  name: "kube-dns"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/deployment.name: "kube-dns"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    k8s-app: "kube-dns"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "kube-dns"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: "10%"
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+        seccomp.security.alpha.kubernetes.io/pod: "docker/default"
+      labels:
+        nirmata.io/deployment.name: "kube-dns"
+        k8s-app: "kube-dns"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "kube-dns"
+      serviceAccount: "kube-dns"
+      schedulerName: "default-scheduler"
+      priorityClassName: "system-cluster-critical"
+      dnsPolicy: "Default"
+      volumes:
+      - name: "kube-dns-config"
+        configMap:
+          name: "kube-dns"
+          defaultMode: 420
+          optional: true
+      containers:
+      - name: "kubedns"
+        image: "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.13"
+        command: []
+        args:
+        - "--domain=cluster.local."
+        - "--dns-port=10053"
+        - "--config-dir=/kube-dns-config"
+        - "--v=2"
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: "dns-local"
+          containerPort: 10053
+          protocol: "UDP"
+        - name: "dns-tcp-local"
+          containerPort: 10053
+          protocol: "TCP"
+        - name: "metrics"
+          containerPort: 10055
+          protocol: "TCP"
+        env:
+        - name: "PROMETHEUS_PORT"
+          value: "10055"
+        volumeMounts:
+        - name: "kube-dns-config"
+          mountPath: "/kube-dns-config"
+        livenessProbe:
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 5
+          httpGet:
+            path: "/healthcheck/kubedns"
+            port: 10054
+            scheme: "HTTP"
+        readinessProbe:
+          initialDelaySeconds: 3
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            path: "/readiness"
+            port: 8081
+            scheme: "HTTP"
+        resources:
+          limits:
+            memory: "170Mi"
+          requests:
+            memory: "70Mi"
+            cpu: "100m"
+      - name: "dnsmasq"
+        image: "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.13"
+        command: []
+        args:
+        - "-v=2"
+        - "-logtostderr"
+        - "-configDir=/etc/k8s/dns/dnsmasq-nanny"
+        - "-restartDnsmasq=true"
+        - "--"
+        - "-k"
+        - "--cache-size=1000"
+        - "--no-negcache"
+        - "--log-facility=-"
+        - "--server=/cluster.local/127.0.0.1#10053"
+        - "--server=/in-addr.arpa/127.0.0.1#10053"
+        - "--server=/ip6.arpa/127.0.0.1#10053"
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: "dns"
+          containerPort: 53
+          protocol: "UDP"
+        - name: "dns-tcp"
+          containerPort: 53
+          protocol: "TCP"
+        volumeMounts:
+        - name: "kube-dns-config"
+          mountPath: "/etc/k8s/dns/dnsmasq-nanny"
+        livenessProbe:
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 5
+          httpGet:
+            path: "/healthcheck/dnsmasq"
+            port: 10054
+            scheme: "HTTP"
+        resources:
+          requests:
+            memory: "20Mi"
+            cpu: "150m"
+      - name: "sidecar"
+        image: "k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.13"
+        command: []
+        args:
+        - "--v=2"
+        - "--logtostderr"
+        - "--probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.cluster.local,5,SRV"
+        - "--probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.cluster.local,5,SRV"
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: "metrics"
+          containerPort: 10054
+          protocol: "TCP"
+        livenessProbe:
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 5
+          httpGet:
+            path: "/metrics"
+            port: 10054
+            scheme: "HTTP"
+        resources:
+          requests:
+            memory: "20Mi"
+            cpu: "10m"
+      - name: "prometheus-to-sd"
+        image: "gcr.io/google-containers/prometheus-to-sd:v0.4.2"
+        command:
+        - "/monitor"
+        - "--source=kubedns:http://localhost:10054?whitelisted=probe_kubedns_latency_ms,probe_kubedns_errors,dnsmasq_misses,dnsmasq_hits"
+        - "--stackdriver-prefix=container.googleapis.com/internal/addons"
+        - "--api-override=https://monitoring.googleapis.com/"
+        - "--pod-id=$(POD_NAME)"
+        - "--namespace-id=$(POD_NAMESPACE)"
+        - "--v=2"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "POD_NAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.name"
+        - name: "POD_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "metadata.namespace"
+        resources: {}
+      securityContext: {}
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"v1\",\"kind\"\
+      :\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"glbc\",\"kubernetes.io/cluster-service\":\"true\"\
+      ,\"kubernetes.io/name\":\"GLBCDefaultBackend\"},\"name\":\"default-http-backend\"\
+      ,\"namespace\":\"kube-system\"},\"spec\":{\"ports\":[{\"name\":\"http\",\"port\"\
+      :80,\"protocol\":\"TCP\",\"targetPort\":8080}],\"selector\":{\"k8s-app\":\"\
+      glbc\"},\"type\":\"NodePort\"}}\n"
+  uid: "98d2fe21-5762-11e9-a030-42010a96010e"
+  name: "default-http-backend"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    nirmata.io/service.name: "default-http-backend"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    kubernetes.io/name: "GLBCDefaultBackend"
+    k8s-app: "glbc"
+spec:
+  clusterIP: "10.31.241.245"
+  externalIPs: []
+  externalTrafficPolicy: "Cluster"
+  loadBalancerSourceRanges: []
+  sessionAffinity: "None"
+  type: "NodePort"
+  selector:
+    k8s-app: "glbc"
+  ports:
+  - name: "http"
+    nodePort: 30821
+    port: 80
+    protocol: "TCP"
+    targetPort: 8080
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  NannyConfiguration: "apiVersion: nannyconfig/v1alpha1\nkind: NannyConfiguration"
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "987a0428-5762-11e9-a030-42010a96010e"
+  name: "heapster-config"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+    nirmata.io/configmap.name: "heapster-config"
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "kube-system"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"apps/v1\"\
+      ,\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\"\
+      :\"Reconcile\",\"k8s-app\":\"fluentd-gcp-scaler\",\"version\":\"v0.5.0\"},\"\
+      name\":\"fluentd-gcp-scaler\",\"namespace\":\"kube-system\"},\"spec\":{\"selector\"\
+      :{\"matchLabels\":{\"k8s-app\":\"fluentd-gcp-scaler\"}},\"template\":{\"metadata\"\
+      :{\"labels\":{\"k8s-app\":\"fluentd-gcp-scaler\"}},\"spec\":{\"containers\"\
+      :[{\"command\":[\"/scaler.sh\",\"--ds-name=fluentd-gcp-v3.2.0\",\"--scaling-policy=fluentd-gcp-scaling-policy\"\
+      ],\"env\":[{\"name\":\"CPU_REQUEST\",\"value\":\"100m\"},{\"name\":\"MEMORY_REQUEST\"\
+      ,\"value\":\"200Mi\"},{\"name\":\"CPU_LIMIT\",\"value\":\"1000m\"},{\"name\"\
+      :\"MEMORY_LIMIT\",\"value\":\"500Mi\"}],\"image\":\"k8s.gcr.io/fluentd-gcp-scaler:0.5\"\
+      ,\"name\":\"fluentd-gcp-scaler\"}],\"serviceAccountName\":\"fluentd-gcp-scaler\"\
+      }}}}\n"
+  uid: "9f62522d-5762-11e9-a030-42010a96010e"
+  name: "fluentd-gcp-scaler"
+  labels:
+    nirmata.io/deployment.name: "fluentd-gcp-scaler"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    version: "v0.5.0"
+    k8s-app: "fluentd-gcp-scaler"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: "fluentd-gcp-scaler"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: "25%"
+      maxUnavailable: "25%"
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        nirmata.io/deployment.name: "fluentd-gcp-scaler"
+        k8s-app: "fluentd-gcp-scaler"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "fluentd-gcp-scaler"
+      serviceAccount: "fluentd-gcp-scaler"
+      schedulerName: "default-scheduler"
+      dnsPolicy: "ClusterFirst"
+      containers:
+      - name: "fluentd-gcp-scaler"
+        image: "k8s.gcr.io/fluentd-gcp-scaler:0.5"
+        command:
+        - "/scaler.sh"
+        - "--ds-name=fluentd-gcp-v3.2.0"
+        - "--scaling-policy=fluentd-gcp-scaling-policy"
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "CPU_REQUEST"
+          value: "100m"
+        - name: "MEMORY_REQUEST"
+          value: "200Mi"
+        - name: "CPU_LIMIT"
+          value: "1000m"
+        - name: "MEMORY_LIMIT"
+          value: "500Mi"
+        resources: {}
+      securityContext: {}
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "9924e047-5762-11e9-a030-42010a96010e"
+  name: "kube-dns"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+    k8s-app: "kube-dns"
+    kubernetes.io/name: "KubeDNS"
+subsets:
+- addresses:
+  - ip: "10.28.0.6"
+    nodeName: "gke-gke-provider-default-pool-40e8e9b0-f552"
+    targetRef:
+      kind: "Pod"
+      name: "kube-dns-7df4cb66cb-m2cfr"
+      namespace: "kube-system"
+      resourceVersion: "671"
+      uid: "9945bb1f-5762-11e9-a030-42010a96010e"
+  ports:
+  - name: "dns"
+    port: 53
+    protocol: "UDP"
+  - name: "dns-tcp"
+    port: 53
+    protocol: "TCP"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  NannyConfiguration: "apiVersion: nannyconfig/v1alpha1\nkind: NannyConfiguration"
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "988936d2-5762-11e9-a030-42010a96010e"
+  name: "metrics-server-config"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+    nirmata.io/configmap.name: "metrics-server-config"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  linear: "{\"coresPerReplica\":256,\"nodesPerReplica\":16,\"preventSinglePointFailure\"\
+    :true}"
+binaryData: {}
+metadata:
+  namespace: "kube-system"
+  annotations: {}
+  uid: "af5f29a7-5762-11e9-a030-42010a96010e"
+  name: "kube-dns-autoscaler"
+  labels:
+    nirmata.io/configmap.name: "kube-dns-autoscaler"
