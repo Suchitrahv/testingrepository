@@ -159,7 +159,7 @@ metadata:
     nirmata.io/component: "frontend"
 spec:
   progressDeadlineSeconds: 2147483647
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 5
   selector:
     matchLabels:
