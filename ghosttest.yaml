@@ -1,0 +1,65 @@
+﻿---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations: {}
+  name: "ghost"
+  labels:
+    nirmata.io/service.name: "ghost"
+    nirmata.io/component: "ghost"
+spec:
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  type: "ClusterIP"
+  selector:
+    nirmata.io/component: "ghost"
+  ports:
+  - name: "http"
+    port: 2368
+    protocol: "TCP"
+
+---
+kind: "Deployment"
+apiVersion: "extensions/v1beta1"
+metadata:
+  annotations: {}
+  name: "ghost"
+  labels:
+    nirmata.io/deployment.name: "ghost"
+    nirmata.io/service.name: "ghost"
+    nirmata.io/user.email: "mohan-anzentechnology-com"
+    nirmata.io/component: "ghost"
+spec:
+  minReadySeconds: 30
+  progressDeadlineSeconds: 90
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      nirmata.io/component: "ghost"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        nirmata.io/deployment.name: "ghost"
+        nirmata.io/service.name: "ghost"
+        nirmata.io/user.email: "mohan-anzentechnology-com"
+        nirmata.io/component: "ghost"
+    spec:
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      containers:
+      - name: "ghost"
+        image: "ghost:0.11.13-alpine"
+        command: []
+        args: []
+        ports:
+        - name: "http"
+          containerPort: 2368
+          protocol: "TCP"

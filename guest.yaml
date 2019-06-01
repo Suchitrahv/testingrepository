@@ -1,0 +1,419 @@
+﻿---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations: {}
+  uid: "08fc0ebb-7ddb-11e9-9c07-063f39e5b500"
+  name: "frontend"
+  labels:
+    nirmata.io/service.name: "frontend"
+    nirmata.io/component: "frontend"
+spec:
+  clusterIP: "10.10.76.243"
+  externalIPs: []
+  externalTrafficPolicy: "Cluster"
+  loadBalancerSourceRanges: []
+  sessionAffinity: "None"
+  type: "NodePort"
+  selector:
+    nirmata.io/service.name: "frontend"
+    nirmata.io/component: "frontend"
+  ports:
+  - nodePort: 32163
+    port: 80
+    protocol: "TCP"
+    targetPort: 80
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations: {}
+  uid: "0cd063b6-7ddb-11e9-9c07-063f39e5b500"
+  name: "redis-slave"
+  labels:
+    nirmata.io/service.name: "redis-slave"
+    nirmata.io/component: "redis-slave"
+spec:
+  clusterIP: "10.10.27.33"
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  sessionAffinity: "None"
+  type: "ClusterIP"
+  selector:
+    nirmata.io/service.name: "redis-slave"
+    nirmata.io/component: "redis-slave"
+  ports:
+  - port: 6379
+    protocol: "TCP"
+    targetPort: 6379
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "guestbook-gitops"
+  annotations: {}
+  uid: "0aad574e-7ddb-11e9-9c07-063f39e5b500"
+  name: "redis-master"
+  labels:
+    nirmata.io/service.name: "redis-master"
+    nirmata.io/component: "redis-master"
+subsets:
+- addresses:
+  - ip: "10.244.0.10"
+    nodeName: "ip-10-10-131-71"
+    targetRef:
+      kind: "Pod"
+      name: "redis-master-8d6d5757f-qndpw"
+      namespace: "guestbook-gitops"
+      resourceVersion: "680"
+      uid: "11d29a30-7ddb-11e9-9c07-063f39e5b500"
+  ports:
+  - port: 6379
+    protocol: "TCP"
+
+---
+kind: "Secret"
+apiVersion: "v1"
+data:
+  .dockercfg: "eyJyZWdpc3RyeS12Mi5uaXJtYXRhLmlvIjp7InBhc3N3b3JkIjoiQ2wwdWQiLCJlbWFpbCI6Im5pcm1hdGFAcmVnaXN0cnkuY29tIiwidXNlcm5hbWUiOiJuaXJtYXRhIn19"
+type: "kubernetes.io/dockercfg"
+metadata:
+  annotations: {}
+  uid: "06dd3652-7ddb-11e9-9c07-063f39e5b500"
+  name: "registry-v2.nirmata.io"
+  labels:
+    nirmata.io/secret.name: "registry-v2.nirmata.io"
+
+---
+apiVersion: "extensions/v1beta1"
+kind: "Ingress"
+metadata:
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+  uid: "193af95c-7ddb-11e9-9c07-063f39e5b500"
+  name: "frontend"
+  labels:
+    nirmata.io/ingress.name: "frontend"
+spec:
+  labels:
+    nirmata.io/ingress.name: "frontend"
+    nirmata.io/application.run: "guestbook"
+    nirmata.io/environment.name: "gitops"
+    nirmata.io/application.name: "guestbook"
+  backend:
+    serviceName: "frontend"
+    servicePort: 80
+  rules:
+  - host: "gbk.new.nirmata.io"
+    http:
+      paths:
+      - path: "/"
+        backend:
+          serviceName: "frontend"
+          servicePort: 80
+status:
+  loadBalancer:
+    ingress:
+    - {}
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "guestbook-gitops"
+  annotations: {}
+  uid: "0cd10b55-7ddb-11e9-9c07-063f39e5b500"
+  name: "redis-slave"
+  labels:
+    nirmata.io/service.name: "redis-slave"
+    nirmata.io/component: "redis-slave"
+subsets:
+- addresses:
+  - ip: "10.244.0.7"
+    nodeName: "ip-10-10-131-71"
+    targetRef:
+      kind: "Pod"
+      name: "redis-slave-6fdd79b8b8-7w5hv"
+      namespace: "guestbook-gitops"
+      resourceVersion: "629"
+      uid: "0e90b390-7ddb-11e9-9c07-063f39e5b500"
+  ports:
+  - port: 6379
+    protocol: "TCP"
+
+---
+kind: "Deployment"
+apiVersion: "extensions/v1beta1"
+metadata:
+  namespace: "guestbook-gitops"
+  annotations:
+    deployment.kubernetes.io/revision: "10"
+  uid: "15709b67-7ddb-11e9-9c07-063f39e5b500"
+  name: "frontend"
+  labels:
+    nirmata.io/deployment.name: "frontend"
+    nirmata.io/service.name: "frontend"
+    nirmata.io/test: "testLabel"
+    nirmata.io/component: "frontend"
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: "guestbook"
+      nirmata.io/service.name: "frontend"
+      tier: "frontend"
+      nirmata.io/component: "frontend"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        app: "guestbook"
+        nirmata.io/deployment.name: "frontend"
+        nirmata.io/service.name: "frontend"
+        tier: "frontend"
+        nirmata.io/test: "testLabel"
+        nirmata.io/component: "frontend"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      schedulerName: "default-scheduler"
+      dnsPolicy: "ClusterFirst"
+      containers:
+      - name: "php-redis"
+        image: "registry-v2.nirmata.io/nirmata/gb-frontend:v36"
+        command: []
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - containerPort: 80
+          protocol: "TCP"
+        env:
+        - name: "GET_HOSTS_FROM"
+          value: "dns"
+        - name: "test"
+          value: ""
+          valueFrom:
+            secretKeyRef:
+              name: "db-secret"
+              key: "password"
+        resources:
+          limits:
+            memory: "500Mi"
+          requests:
+            memory: "500Mi"
+      securityContext: {}
+      affinity:
+        podAntiAffinity: {}
+      imagePullSecrets:
+      - name: "registry-v2.nirmata.io"
+
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  namespace: "guestbook-gitops"
+  annotations: {}
+  uid: "08fd6122-7ddb-11e9-9c07-063f39e5b500"
+  name: "frontend"
+  labels:
+    nirmata.io/service.name: "frontend"
+    nirmata.io/component: "frontend"
+subsets:
+- addresses:
+  - ip: "10.244.0.21"
+    nodeName: "ip-10-10-131-71"
+    targetRef:
+      kind: "Pod"
+      name: "frontend-7fbb78688f-nbjp9"
+      namespace: "guestbook-gitops"
+      resourceVersion: "3420"
+      uid: "7112ba36-7deb-11e9-9c07-063f39e5b500"
+  ports:
+  - port: 80
+    protocol: "TCP"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations: {}
+  uid: "0aaca921-7ddb-11e9-9c07-063f39e5b500"
+  name: "redis-master"
+  labels:
+    nirmata.io/service.name: "redis-master"
+    nirmata.io/component: "redis-master"
+spec:
+  clusterIP: "10.10.224.89"
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  sessionAffinity: "None"
+  type: "ClusterIP"
+  selector:
+    nirmata.io/service.name: "redis-master"
+    nirmata.io/component: "redis-master"
+  ports:
+  - port: 6379
+    protocol: "TCP"
+    targetPort: 6379
+
+---
+kind: "Deployment"
+apiVersion: "extensions/v1beta1"
+metadata:
+  namespace: "guestbook-gitops"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  uid: "11cf654b-7ddb-11e9-9c07-063f39e5b500"
+  name: "redis-master"
+  labels:
+    nirmata.io/deployment.name: "redis-master"
+    nirmata.io/service.name: "redis-master"
+    nirmata.io/test: "testLabel"
+    nirmata.io/component: "redis-master"
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: "redis"
+      role: "master"
+      nirmata.io/service.name: "redis-master"
+      tier: "backend"
+      nirmata.io/component: "redis-master"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 2
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        app: "redis"
+        nirmata.io/deployment.name: "redis-master"
+        role: "master"
+        nirmata.io/service.name: "redis-master"
+        tier: "backend"
+        nirmata.io/test: "testLabel"
+        nirmata.io/component: "redis-master"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      schedulerName: "default-scheduler"
+      dnsPolicy: "ClusterFirst"
+      containers:
+      - name: "master"
+        image: "k8s.gcr.io/redis:latest"
+        command: []
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "Always"
+        ports:
+        - name: "tcp"
+          containerPort: 6379
+          protocol: "TCP"
+        resources:
+          limits:
+            memory: "500Mi"
+          requests:
+            memory: "500Mi"
+      securityContext: {}
+
+---
+kind: "Deployment"
+apiVersion: "extensions/v1beta1"
+metadata:
+  namespace: "guestbook-gitops"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  uid: "0e8d2f92-7ddb-11e9-9c07-063f39e5b500"
+  name: "redis-slave"
+  labels:
+    nirmata.io/deployment.name: "redis-slave"
+    nirmata.io/service.name: "redis-slave"
+    nirmata.io/test: "testLabel"
+    nirmata.io/component: "redis-slave"
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: "redis"
+      role: "slave"
+      nirmata.io/service.name: "redis-slave"
+      tier: "backend"
+      nirmata.io/component: "redis-slave"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations: {}
+      labels:
+        app: "redis"
+        nirmata.io/deployment.name: "redis-slave"
+        role: "slave"
+        nirmata.io/service.name: "redis-slave"
+        tier: "backend"
+        nirmata.io/test: "testLabel"
+        nirmata.io/component: "redis-slave"
+    spec:
+      restartPolicy: "Always"
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      schedulerName: "default-scheduler"
+      dnsPolicy: "ClusterFirst"
+      containers:
+      - name: "slave"
+        image: "gcr.io/google_samples/gb-redisslave:v1"
+        command: []
+        args: []
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: "File"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - containerPort: 6379
+          protocol: "TCP"
+        env:
+        - name: "GET_HOSTS_FROM"
+          value: "dns"
+        resources:
+          limits:
+            memory: "500Mi"
+          requests:
+            memory: "500Mi"
+      securityContext: {}
+
+---
+kind: "Secret"
+apiVersion: "v1"
+data:
+  password: "ZGVmYXVsdA=="
+type: "Opaque"
+metadata:
+  annotations: {}
+  uid: "07e8e661-7ddb-11e9-9c07-063f39e5b500"
+  name: "db-secret"
+  labels:
+    nirmata.io/secret.name: "db-secret"
